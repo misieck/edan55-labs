@@ -1,103 +1,95 @@
-package maxcut;
-import java.util.Scanner;
-import java.util.Iterator;
-import java.util.ListIterator;
-import java.util.Random;
-import java.util.LinkedList;
-import java.io.*;
+import java.util.Scanner;import java.util.ArrayList;import java.util.Arrays;import java.io.*;
 class Graph {
-	int	n;
-	int	m;
-	Node	node[];
-	Edge	edge[];
-
-    Graph(Node node[], Edge edge[])
-	{
-		this.node	= node;
-		this.n		= node.length;
-		this.edge	= edge;
-		this.m		= edge.length;
-	}
-
-    Node other(Edge a, Node u)
-	{
-		if (a.u == u)	
-			return a.v;
-		else
-			return a.u;
-	}
-    void algR() {
-        Random r = new Random(); //6942013
-        for (int i = 0; i < n; i++) {
-            node[i].p = r.nextBoolean();
-        }
+    ArrayList<Node> g;
+    public Graph (Node[] n) {
+        g = new ArrayList<Node>(Arrays.asList(n));
     }
-    void algS() {
-        int i = 0;
-        int last = 0;
-        do {
-            int c = node[i].value();
-            int s = node[i].valueIfSwapped();
-            if (c < s) {
-                node[i].p = !node[i].p;
-                last = i;
+    public int algR0() {
+        int maxn = 0;
+        Node bestn = null;
+        for (Node n: g) {
+            if (n.removed <= 0){
+                if (n.neighbors == 0) {
+                    n.remove();
+                    int score = 1 + algR0();
+                    n.add();
+                    return score;
+                }
+                else if (n.neighbors > maxn) {
+                    maxn = n.neighbors;
+                    bestn = n;
+                }
             }
-            i++;
-            if (i >= n) {
-                i = 0;
-            } 
         }
-        while (i != last);
-    }
-    void algRS() {
-        algR();
-        algS();
-    }
-    int eval() {
-        int sum = 0;
-        for (Edge e: edge) {
-            sum += e.value();
-        }
-        return sum;
-    }
+        if (bestn == null) return 0;
+        else {
+            bestn.remove();
+            int score1 = algR0();
+            bestn.removeAllNeighbors();
+            int score2 = 1 + algR0();
+            bestn.add();
+            bestn.addAllNeighbors();
+            return Math.max(score1, score2);
+        }} 
 }
-
 class Node {
-	Node	next;
-	LinkedList<Edge>	adj;
-    boolean p;
-	Node(int i)
-	{
-		adj = new LinkedList<Edge>();
-        p = false;
-	}
-    int value() {
-        int sum = 0;
-        for (Edge e: adj) {
-            sum += e.value();
+    int removed;
+    int neighbors;
+    ArrayList<Node> connected;
+	public Node() {
+        removed = 0;
+        connected = new ArrayList<Node>();
+        neighbors = 0;
+    }
+    public void addNeighbor(Node n) {
+        connected.add(n);
+        n.connected.add(this);
+        n.neighbors++;
+        neighbors++;
+    }
+    public void removeAllNeighbors() {
+        for (Node n: connected) {
+            n.remove();
+        }}
+    public void addAllNeighbors() {
+        for (Node n: connected) {
+            n.add();
+        }}
+    public void remove() {
+        if (removed == 0) {
+            for (Node n: connected) {
+                n.neighbors--;
+            }
         }
-        return sum;
+        removed++;
     }
-    int valueIfSwapped() {
-        p = !p;
-        int sum = value();
-        p = !p;
-        return sum;
-    }
+    public void add() {
+        removed--;
+        if (removed == 0) {
+            for (Node n: connected) {
+                n.neighbors++;
+            }}}}
+public class IndependentSet {
+    public static void main(String args[]) {
+        File f = new File("data/g120.in"); // change this line to change the input data
+        int	n, i, j, k;
+        try (Scanner s = new Scanner(f)){
+            n = s.nextInt();
+            Node[] node = new Node[n];
+            for (i = 0; i < n; i += 1)
+                node[i] = new Node();
+            for (i = 0; i < n; i += 1) {
+                for (j = 0; j < n; j++) {
+                    k = s.nextInt();
+                    if (k == 1) {
+                        node[i].addNeighbor(node[j]);
+                    }}}
+            Graph g = new Graph(node);
+            System.out.println("Biggest independent cut: " + g.algR0());
+        }
+        catch (FileNotFoundException e) {
+            System.out.println("Failed bad");
+            return;
+        }
+	}
 }
-
-class Edge {
-	Node	u,v;
-    int     c;
-	Edge(Node u, Node v, int c)
-	{
-		this.u = u;
-		this.v = v;
-        this.c = c;
-	}   
-    int value() {
-        if (u.p ^ v.p) return c;
-        else return 0;
-    }
-}
-
