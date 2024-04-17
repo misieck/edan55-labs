@@ -1,4 +1,5 @@
-import java.util.Scanner;import java.util.ArrayList;import java.util.Arrays;import java.io.*;
+import java.util.Scanner;import java.util.ArrayList;import java.util.Arrays;
+
 class Graph {
     ArrayList<Node> g;
     public Graph (Node[] n) {
@@ -8,7 +9,7 @@ class Graph {
         int maxn = 0;
         Node bestn = null;
         for (Node n: g) {
-            if (n.removed <= 0){
+            if (n.remove_count <= 0){
                 if (n.neighbors == 0) {
                     n.remove();
                     int score = 1 + algR0();
@@ -30,17 +31,20 @@ class Graph {
             bestn.add();
             bestn.addAllNeighbors();
             return Math.max(score1, score2);
-        }} 
+        }
+    }
 }
+
 class Node {
-    int removed;
+    int remove_count;
     int neighbors;
     ArrayList<Node> connected;
 	public Node() {
-        removed = 0;
+        remove_count = 0;
         connected = new ArrayList<Node>();
         neighbors = 0;
     }
+
     public void addNeighbor(Node n) {
         connected.add(n);
         n.connected.add(this);
@@ -51,29 +55,33 @@ class Node {
         for (Node n: connected) {
             n.remove();
         }}
+
     public void addAllNeighbors() {
         for (Node n: connected) {
             n.add();
         }}
     public void remove() {
-        if (removed == 0) {
+        if (remove_count == 0) {
             for (Node n: connected) {
                 n.neighbors--;
             }
         }
-        removed++;
+        remove_count++;
     }
     public void add() {
-        removed--;
-        if (removed == 0) {
+        remove_count--;
+        if (remove_count == 0) {
             for (Node n: connected) {
                 n.neighbors++;
-            }}}}
+            }}
+    }
+}
+
 public class IndependentSet {
     public static void main(String args[]) {
-        File f = new File("data/g120.in"); // change this line to change the input data
+        //File f = new File("data/g120.in"); // change this line to change the input data
         int	n, i, j, k;
-        try (Scanner s = new Scanner(f)){
+        try (Scanner s = new Scanner(System.in)){
             n = s.nextInt();
             Node[] node = new Node[n];
             for (i = 0; i < n; i += 1)
@@ -87,7 +95,7 @@ public class IndependentSet {
             Graph g = new Graph(node);
             System.out.println("Biggest independent cut: " + g.algR0());
         }
-        catch (FileNotFoundException e) {
+        catch (Exception e) {
             System.out.println("Failed bad");
             return;
         }
