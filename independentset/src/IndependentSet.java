@@ -54,6 +54,7 @@ class Graph {
         int maxn = 0;
         Node bestn = null;
         ArrayList<Node> nextiter = new ArrayList<>(g);
+        ArrayList<Node> mono = new ArrayList<>();
         int score = 0;
         for (Node n: g) {
             if (n.neighbors == 1) {
@@ -61,10 +62,6 @@ class Graph {
                 nextiter.removeAll(n.connected);
                 n.remove();
                 n.removeAllNeighbors();
-                score += algR1(nextiter);
-                n.add();
-                n.addAllNeighbors();
-                return score;
             }
             else if (n.neighbors == 0) {
                 //n.remove();
@@ -83,6 +80,14 @@ class Graph {
             //for (Node l: lonersRemoved) l.add();
             return score;
         }
+        else if (bestn.remove_count != 0) {
+            score += algR1(nextiter);
+            for (Node n: mono) {
+                n.add();
+                n.addAllNeighbors();
+            }
+            return score;
+        }
         else {
             // system.out.println(bestn + " has been deemed the best, he will face trial in accordance to our customs");
             bestn.remove();
@@ -96,54 +101,6 @@ class Graph {
             bestn.add();
             bestn.addAllNeighbors();
             //for (Node l: lonersRemoved) l.add();
-            // system.out.println(bestn + " can either leave for " + score1 + " or stay for " + score2);
-            return Math.max(score1, score2);
-        }
-    }
-
-    public int algR1(int currentscore) {
-        int maxn = 0;
-        Node bestn = null;
-        ArrayList<Node> lonersRemoved = new ArrayList<>();
-        ArrayList<Node> monosRemoved = new ArrayList<>();
-        int score = currentscore;
-        for (Node n: g) {
-            if (n.remove_count <= 0){
-                if (n.neighbors == 1) {
-                    n.remove();
-                    n.removeAllNeighbors();
-                    score++;
-                }
-                else if (n.neighbors == 0) {
-                    n.remove();
-                    lonersRemoved.add(n);
-                    score++;
-                    // system.out.println(n + " died from loneliness, score is now: " + score);
-                }
-                else if (n.neighbors > maxn) {
-                    maxn = n.neighbors;
-                    bestn = n;
-                }
-            }
-        }
-        if (bestn == null) {
-            // system.out.println("Bottom detected");
-            for (Node m: monosRemoved) {m.add(); m.addAllNeighbors();}
-            for (Node l: lonersRemoved) l.add();
-            return score;
-        }
-        else {
-            // system.out.println(bestn + " has been deemed the best, he will face trial in accordance to our customs");
-            bestn.remove();
-            // system.out.println("-- FIRST TRIAL OF " + bestn + " --");
-            int score1 = algR1(score);
-            bestn.removeAllNeighbors();
-            // system.out.println("-- SECOND TRIAL OF " + bestn + " --");
-            int score2 = algR1(score + 1);
-            bestn.add();
-            bestn.addAllNeighbors();
-            for (Node m: monosRemoved) {m.add(); m.addAllNeighbors();}
-            for (Node l: lonersRemoved) l.add();
             // system.out.println(bestn + " can either leave for " + score1 + " or stay for " + score2);
             return Math.max(score1, score2);
         }
