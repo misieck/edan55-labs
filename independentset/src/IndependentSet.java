@@ -7,6 +7,15 @@ class Graph {
     public Graph (Node[] n) {
         g = new ArrayList<Node>(Arrays.asList(n));
     }
+    public void analytic() {
+        for (Node n: g) {
+            System.out.println("" + n + " has neighbors: ");
+            for (Node e: n.connected) {
+                System.out.println(" - " + e );
+            }
+            System.out.println("total: " + n.neighbors);
+        }
+    }
     public int algR0() { return algR0(g); }
     public int algR0(ArrayList<Node> g) {
         int maxn = 0;
@@ -19,7 +28,7 @@ class Graph {
                 //lonersRemoved.add(n);
                 nextiter.remove(n);
                 score++;
-                // system.out.println(n + " died from loneliness, score is now: " + score);
+                // System.out.println(n + " died from loneliness, score is now: " + score);
             }
             else if (n.neighbors > maxn) {
                 maxn = n.neighbors;
@@ -27,24 +36,24 @@ class Graph {
             }
         }
         if (bestn == null) {
-            // system.out.println("Bottom detected");
+            // System.out.println("Bottom detected");
             //for (Node l: lonersRemoved) l.add();
             return score;
         }
         else {
-            // system.out.println(bestn + " has been deemed the best, he will face trial in accordance to our customs");
+            // System.out.println(bestn + " has been deemed the best, he will face trial in accordance to our customs");
             bestn.remove();
             nextiter.remove(bestn);
-            // system.out.println("-- FIRST TRIAL OF " + bestn + " --");
+            // System.out.println("-- FIRST TRIAL OF " + bestn + " --");
             int score1 = score + algR0(nextiter);
             bestn.removeAllNeighbors();
             nextiter.removeAll(bestn.connected);
-            // system.out.println("-- SECOND TRIAL OF " + bestn + " --");
+            // System.out.println("-- SECOND TRIAL OF " + bestn + " --");
             int score2 = score + 1 + algR0(nextiter);
             bestn.add();
             bestn.addAllNeighbors();
             //for (Node l: lonersRemoved) l.add();
-            // system.out.println(bestn + " can either leave for " + score1 + " or stay for " + score2);
+            // System.out.println(bestn + " can either leave for " + score1 + " or stay for " + score2);
             return Math.max(score1, score2);
         }
     }
@@ -58,50 +67,59 @@ class Graph {
         int score = 0;
         for (Node n: g) {
             if (n.neighbors == 1) {
-                nextiter.remove(n);
-                nextiter.removeAll(n.connected);
-                n.remove();
-                n.removeAllNeighbors();
+                if (n.remove_count == 0) {
+                    nextiter.remove(n);
+                    nextiter.removeAll(n.connected);
+                    n.removeAllNeighbors();
+                    mono.add(n);
+                    score++;
+                    // System.out.println(n + " has become a the single ladies, score is now: " + score);
+                }
             }
             else if (n.neighbors == 0) {
                 //n.remove();
                 //lonersRemoved.add(n);
                 nextiter.remove(n);
                 score++;
-                // system.out.println(n + " died from loneliness, score is now: " + score);
+                // System.out.println(n + " died from loneliness, score is now: " + score);
             }
-            if (n.neighbors > maxn) {
+            else if (n.neighbors > maxn) {
                 maxn = n.neighbors;
                 bestn = n;
             }
         }
         if (bestn == null) {
-            // system.out.println("Bottom detected");
+            // System.out.println("Bottom detected");
             //for (Node l: lonersRemoved) l.add();
+            for (Node n: mono) {
+                n.addAllNeighbors();
+            }
             return score;
         }
         else if (bestn.remove_count != 0) {
             score += algR1(nextiter);
             for (Node n: mono) {
-                n.add();
                 n.addAllNeighbors();
             }
             return score;
         }
         else {
-            // system.out.println(bestn + " has been deemed the best, he will face trial in accordance to our customs");
+            // System.out.println(bestn + " has been deemed the best, he will face trial in accordance to our customs");
             bestn.remove();
             nextiter.remove(bestn);
-            // system.out.println("-- FIRST TRIAL OF " + bestn + " --");
+            // System.out.println("-- FIRST TRIAL OF " + bestn + " --");
             int score1 = score + algR1(nextiter);
             bestn.removeAllNeighbors();
             nextiter.removeAll(bestn.connected);
-            // system.out.println("-- SECOND TRIAL OF " + bestn + " --");
+            // System.out.println("-- SECOND TRIAL OF " + bestn + " --");
             int score2 = score + 1 + algR1(nextiter);
             bestn.add();
             bestn.addAllNeighbors();
             //for (Node l: lonersRemoved) l.add();
-            // system.out.println(bestn + " can either leave for " + score1 + " or stay for " + score2);
+            // System.out.println(bestn + " can either leave for " + score1 + " or stay for " + score2);
+            for (Node n: mono) {
+                n.addAllNeighbors();
+            }
             return Math.max(score1, score2);
         }
     }
@@ -120,6 +138,7 @@ class Node {
     }
 
     public void addNeighbor(Node n) {
+        if (connected.contains(n)) return;
         connected.add(n);
         n.connected.add(this);
         n.neighbors++;
@@ -140,7 +159,7 @@ class Node {
             for (Node n: connected) {
                 n.neighbors--;
             }
-            // system.out.println("REMOVED " + this);
+            // System.out.println("REMOVED " + this);
         }
     }
     public void add() {
@@ -149,7 +168,7 @@ class Node {
             for (Node n: connected) {
                 n.neighbors++;
             }
-            // system.out.println("ADDED " + this);
+            // System.out.println("ADDED " + this);
         }
     }
     public String toString() {return "Node"+idx;}
@@ -178,6 +197,7 @@ public class IndependentSet {
                     }}}
             s.close();
             Graph g = new Graph(node);
+            // g.analytic();
             System.out.println("Biggest independent cut: " + g.algR1());
         }
         catch (Exception e) {
