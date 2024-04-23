@@ -4,6 +4,7 @@ import java.util.ArrayList;import java.util.Arrays;
 
 class Graph {
     ArrayList<Node> g;
+    int calls = 0;
     public Graph (Node[] n) {
         g = new ArrayList<Node>(Arrays.asList(n));
     }
@@ -16,6 +17,7 @@ class Graph {
     }
     public int algR0() { return algR0(g); }
     public int algR0(ArrayList<Node> g) {
+        calls++;
         int maxn = 0;
         Node bestn = null;
         ArrayList<Node> nextiter = new ArrayList<>(g);
@@ -59,6 +61,7 @@ class Graph {
     
     public int algR1() { return algR1(g); }
     public int algR1(ArrayList<Node> g)  {
+        calls++;
         int maxn = 0;
         Node bestn = null;
         ArrayList<Node> nextiter = new ArrayList<>(g);
@@ -122,10 +125,12 @@ class Graph {
 
     public int algR2() { return algR2(g); }
     public int algR2(ArrayList<Node> g)  {
+        calls++;
         int maxn = 0;
         Node bestn = null;
         ArrayList<Node> nextiter = new ArrayList<>(g);
         ArrayList<Node> mono = new ArrayList<>();
+        ArrayList<Node> merge = new ArrayList<>();
         int score = 0;
         for (Node n: g) {
             if (n.neighbors == 2) {
@@ -148,13 +153,10 @@ class Graph {
                         nextiter.remove(n);
                         nextiter.removeAll(n.connected);
                         nextiter.add(merged);
-                        score += algR2(nextiter);
-                        // System.out.println(n + " just finished writing a successful teen romance novel about their experience with " + nbr[0] + " and " + nbr[1] + ", score is now: " + score);
                         n.add();
-                        n.addAllNeighbors();
-                        merged.turboRemove();
-                        for (Node ns: mono) ns.addAllNeighbors();
-                        return score;
+                        mono.add(n);
+                        merge.add(merged);
+                        // System.out.println(n + " just finished writing a successful teen romance novel about their experience with " + nbr[0] + " and " + nbr[1] + ", score is now: " + score);
                     }
                 }
             } else if (n.neighbors == 1) {
@@ -186,9 +188,8 @@ class Graph {
         if (bestn == null) {
             // System.out.println("Bottom detected");
             //for (Node l: lonersRemoved) l.add();
-            for (Node n: mono) {
-                n.addAllNeighbors();
-            }
+            for (Node n: mono) n.addAllNeighbors();
+            for (Node n: merge) n.turboRemove();
             return score;
         }
         else {
@@ -212,9 +213,8 @@ class Graph {
             bestn.addAllNeighbors();
             //for (Node l: lonersRemoved) l.add();
             // System.out.println(bestn + " can either leave for " + score1 + " or stay for " + score2);
-            for (Node n: mono) {
-                n.addAllNeighbors();
-            }
+            for (Node n: mono) n.addAllNeighbors();
+            for (Node n: merge) n.turboRemove();
             return Math.max(score1, score2);
         }
     }
@@ -315,6 +315,7 @@ public class IndependentSet {
             Graph g = new Graph(node);
             // g.analytic();
             System.out.println("Biggest independent cut: " + g.algR2());
+            System.out.println("Recursive calls: " + g.calls);
         }
         catch (Exception e) {
             System.out.println("Failed bad:" + e);
