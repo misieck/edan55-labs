@@ -9,11 +9,9 @@ class Graph {
     }
     public void analytic() {
         for (Node n: g) {
-            System.out.println("" + n + " has neighbors: ");
-            for (Node e: n.connected) {
-                System.out.println(" - " + e );
-            }
-            System.out.println("total: " + n.neighbors);
+            // System.out.println("" + n + " has neighbors: ");
+            //for (Node e: n.connected) System.out.println(" - " + e );
+            // System.out.println("total: " + n.neighbors);
         }
     }
     public int algR0() { return algR0(g); }
@@ -122,7 +120,7 @@ class Graph {
         }
     }
 
-    public int algR2() { return algR1(g); }
+    public int algR2() { return algR2(g); }
     public int algR2(ArrayList<Node> g)  {
         int maxn = 0;
         Node bestn = null;
@@ -135,27 +133,31 @@ class Graph {
                     Node[] nbr = n.getAliveNeighbors();
                     score++;
                     if (nbr[0].connected.contains(nbr[1])) {
+                        // System.out.println(n + " just had a threesome with " + nbr[0] + " and " + nbr[1] + ", score is now: " + score);
                         nextiter.remove(n);
                         nextiter.removeAll(n.connected);
                         n.removeAllNeighbors();
                         mono.add(n);
                     } else {
+                        // System.out.println(n + " is in a love triangle with " + nbr[0] + " and " + nbr[1] + ", score is now: " + score);
                         n.remove();
                         Node merged = new Node(n.idx);
-                        for (Node m: nbr[0].connected) merged.addNeighbor(m);
-                        for (Node m: nbr[1].connected) merged.addNeighbor(m);
-                        nbr[0].remove();
-                        nbr[1].remove();
+                        for (Node m: nbr[0].getAliveNeighbors()) merged.addNeighbor(m);
+                        for (Node m: nbr[1].getAliveNeighbors()) merged.addNeighbor(m);
+                        n.removeAllNeighbors();
+                        nextiter.remove(n);
+                        nextiter.removeAll(n.connected);
                         nextiter.add(merged);
                         score += algR2(nextiter);
+                        // System.out.println(n + " just finished writing a successful teen romance novel about their experience with " + nbr[0] + " and " + nbr[1] + ", score is now: " + score);
                         n.add();
+                        n.addAllNeighbors();
                         merged.turboRemove();
-                        nbr[0].add();
-                        nbr[1].add();
+                        for (Node ns: mono) ns.addAllNeighbors();
+                        return score;
                     }
                 }
-            }
-            if (n.neighbors == 1) {
+            } else if (n.neighbors == 1) {
                 if (n.remove_count == 0) {
                     nextiter.remove(n);
                     nextiter.removeAll(n.connected);
@@ -165,12 +167,12 @@ class Graph {
                     // System.out.println(n + " has become a the single ladies, score is now: " + score);
                 }
             } else if (n.neighbors == 0) {
-                //n.remove();
-                //lonersRemoved.add(n);
-                nextiter.remove(n);
-                score++;
-                // System.out.println(n + " died from loneliness, score is now: " + score);
-            }
+                if (n.remove_count == 0) {
+                    nextiter.remove(n);
+                    score++;
+                    // System.out.println(n + " died from loneliness, score is now: " + score);
+                }
+            } 
         }
 
         for (Node n : nextiter) {
@@ -191,13 +193,20 @@ class Graph {
         }
         else {
             // System.out.println(bestn + " has been deemed the best, he will face trial in accordance to our customs");
+            // System.out.print("this node thinks they have " + bestn.neighbors + " friends, namely: ");
+            // for (Node n: bestn.getAliveNeighbors()) System.out.print(n + ",");
+            // System.out.println();
             bestn.remove();
             nextiter.remove(bestn);
-            // System.out.println("-- FIRST TRIAL OF " + bestn + " --");
+            // System.out.println("-- FIRST TRIAL OF " + bestn +  " --");
+            // for (Node n: nextiter) System.out.print(n + ":" + n.remove_count + ",");
+            // System.out.println();
             int score1 = score + algR2(nextiter);
             bestn.removeAllNeighbors();
             nextiter.removeAll(bestn.connected);
             // System.out.println("-- SECOND TRIAL OF " + bestn + " --");
+            // for (Node n: nextiter) System.out.print(n + ":" + n.remove_count + ",");
+            // System.out.println();
             int score2 = score + 1 + algR2(nextiter);
             bestn.add();
             bestn.addAllNeighbors();
@@ -232,7 +241,11 @@ class Node {
                 if (i == neighbors) return nbr;
             }
         }
-        return nbr;
+        Node[] nb = new Node[i];
+        for (int j = 0; j < i; j++) {
+            nb[j] = nbr[j];
+        }
+        return nb;
     }
     public void addNeighbor(Node n) {
         if (connected.contains(n)) return;
