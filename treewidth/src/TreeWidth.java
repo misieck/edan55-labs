@@ -4,16 +4,15 @@ import java.util.ArrayList;import java.util.Arrays;
 
 class Bag {
     int idx;
-    ArrayList<Bag> neighbors;
+    ArrayList<Bag> childs;
     ArrayList<Node> nodes;
     public Bag(int i) {
         idx = i;
-        neighbors = new ArrayList<Bag>();
+        childs = new ArrayList<Bag>();
         nodes = new ArrayList<Node>();
     }
-    public void addNeighbor(Bag n) {
-        neighbors.add(n);
-        n.neighbors.add(n);
+    public void addChild(Bag n) {
+        childs.add(n);
     }
     public void addNode(Node n) {
         nodes.add(n);
@@ -91,7 +90,7 @@ public class TreeWidth {
                 else {
                     int n1 = Integer.parseInt(line[0]);
                     int n2 = Integer.parseInt(line[1]);
-                    node[n1].addNeighbor(node[n2]);
+                    bag[n1].addChild(bag[n2]);
                 }
             }
         }
