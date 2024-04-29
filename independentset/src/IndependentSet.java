@@ -35,7 +35,6 @@ class Graph {
                 bestn = n;
             }
         }
-
         if (bestn == null) {
             // System.out.println("Bottom detected");
             //for (Node l: lonersRemoved) l.add();
@@ -77,26 +76,29 @@ class Graph {
                     score++;
                     // System.out.println(n + " has become a the single ladies, score is now: " + score);
                 }
-            } else if (n.neighbors == 0) {
+            }
+            else if (n.neighbors == 0) {
                 //n.remove();
                 //lonersRemoved.add(n);
                 nextiter.remove(n);
                 score++;
                 // System.out.println(n + " died from loneliness, score is now: " + score);
             }
-        }
-
-        for (Node n : nextiter) {
-            if(n.neighbors >= maxn) {
+            else if (n.neighbors > maxn) {
                 maxn = n.neighbors;
                 bestn = n;
             }
         }
-
-
         if (bestn == null) {
             // System.out.println("Bottom detected");
             //for (Node l: lonersRemoved) l.add();
+            for (Node n: mono) {
+                n.addAllNeighbors();
+            }
+            return score;
+        }
+        else if (bestn.remove_count != 0) {
+            score += algR1(nextiter);
             for (Node n: mono) {
                 n.addAllNeighbors();
             }
