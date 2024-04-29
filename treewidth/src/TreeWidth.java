@@ -1,6 +1,104 @@
 import java.util.Scanner;
+import java.util.Set;
 import java.io.File;
 import java.util.ArrayList;import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
+class Nodes {
+    static boolean[][] connected;
+    public static void setSize(int size) {
+        connected = new boolean[size][size];
+    }
+    public static void connect(int x, int y) {
+        connected[x][y] = true;
+        connected[y][x] = true;
+    }
+    public static boolean isCon(int x, int y) {
+        return connected[x][y];
+    }
+    public static boolean containsAny(int i,Set<Integer> S) {
+        for (int j: S) {
+            if (isCon(i,j)) return true;
+        }
+        return false;
+    }
+}
+
+abstract class NiceTree {
+    Map<Set<Integer>, Integer> cache = new HashMap<Set<Integer>,Integer>();
+    public int c(Set<Integer> S) {
+        if (cache.containsKey(S)) return cache.get(S);
+        int res = c_impl(S);
+        cache.put(S, res);
+        return res;
+    }
+    public abstract int c_impl(Set<Integer> S);
+}
+
+class NiceLeaf extends NiceTree {
+    public int c_impl(Set<Integer> S) {
+        if (S.size() != 0) System.out.println("ERROR: S is not empty when it reached Leaf");
+        return 0;
+    }
+}
+
+class NiceIntroduce extends NiceTree {
+    int introduced;
+    NiceTree next;
+    public void setIntroduced(int introduced) {
+        this.introduced = introduced;
+    }
+    public void setNext(NiceTree next) {
+        this.next = next;
+    }
+    public int c_impl(Set<Integer> S) {
+        if (S.contains(introduced)) {
+            Set<Integer> Sr = new HashSet<Integer>(S);
+            Sr.remove(introduced);
+            return next.c(Sr) + 1;
+        }
+        else {
+            return next.c(S);
+        }
+    }
+}
+
+class NiceRemove extends NiceTree {
+    int removed;
+    NiceTree next;
+    public void setIntroduced(int removed) {
+        this.removed = removed;
+    }
+    public void setNext(NiceTree next) {
+        this.next = next;
+    }
+    public int c_impl(Set<Integer> S) {
+        if (Nodes.containsAny(removed, S)) {
+            return next.c(S);
+        }
+        Set<Integer> Sr = new HashSet<>(S);
+        Sr.add(removed);
+        int r1 = 1 + next.c(Sr);
+        int r2 = next.c(S);
+        return Math.max(r1, r2);
+    }
+}
+
+class NiceJoin extends NiceTree {
+    NiceTree left;
+    NiceTree right;
+    public void setLeft(NiceTree left) {
+        this.left = left;
+    }
+    public void setRight(NiceTree right) {
+        this.right = right;
+    }
+    public int c_impl(Set<Integer> S) {
+        return left.c(S) + right.c(S) - S.size();
+    }
+}
 
 class Bag {
     int idx;
