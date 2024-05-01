@@ -134,7 +134,7 @@ abstract class NiceTree extends Tree {
         if (cache.containsKey(S)) return cache.get(S);
         int res = c_impl(S);
         cache.put(S, res);
-        System.out.println(res);
+        //System.out.print(res+",");
         return res;
     }
     public abstract int c_impl(Set<Integer> S);
@@ -235,9 +235,10 @@ class NiceForget extends NiceChain {
         Set<Integer> Sr = new HashSet<>(S);
         Sr.add(removed);
         //System.out.println("--TESTING ADD FOR "+removed+"--");
-        int r1 = 1 + next.c(Sr);
+        int r1 = next.c(Sr);
         //System.out.println("--TESTING NOT FOR "+removed+"--");
         int r2 = next.c(S);
+        System.out.println(S+"+["+removed+"]="+r1+" or "+r2);
         return Math.max(r1, r2);
     }
     public String toString() {return "NiceForget: "+ removed + ", ";}
