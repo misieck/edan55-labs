@@ -11,7 +11,7 @@ import java.io.FileNotFoundException;
 
 public class TreeWidth {
     public static void checkAssert() throws RuntimeException {
-        boolean assertsEnabled = false;
+        boolean assertsEnabled = true;
         assert assertsEnabled = true; // Intentional side effect!!!
         if (!assertsEnabled)
             throw new RuntimeException("Asserts must be enabled!!!");
@@ -73,13 +73,14 @@ public class TreeWidth {
                 else {
                     int n1 = Integer.parseInt(line[0]);
                     int n2 = Integer.parseInt(line[1]);
-                    tree[n1-1].addChild(tree[n2-1]);
+                    tree[n1].addChild(tree[n2]);
                 }
             }
             //UglyTree zero = new UglyTree(-1);
 
             //Random random = new Random(32434);
             UglyTree root = tree[0]; //random.nextInt(tree.length)];
+            root.addChild(tree[1]);
             //zero.addChild(root);
             printUgly(root);
 
