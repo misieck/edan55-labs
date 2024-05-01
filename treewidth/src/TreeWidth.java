@@ -80,6 +80,7 @@ public class TreeWidth {
             NiceTree nice = root.niceify();
             System.out.println(nice.c(new HashSet<>()));
             root.printTree();
+            nice.printTree();
     }
 
 
@@ -131,6 +132,7 @@ abstract class NiceTree extends Tree {
         if (cache.containsKey(S)) return cache.get(S);
         int res = c_impl(S);
         cache.put(S, res);
+        System.out.println(res);
         return res;
     }
     public abstract int c_impl(Set<Integer> S);
