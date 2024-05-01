@@ -86,16 +86,14 @@ class NiceForget extends NiceChain {
 }
 
 class NiceJoin extends NiceTree {
-    NiceTree left;
-    NiceTree right;
-    public void setLeft(NiceTree left) {
-        this.left = left;
-    }
-    public void setRight(NiceTree right) {
-        this.right = right;
+    ArrayList<NiceTree> nexts = new ArrayList<>();
+    public void addNext(NiceTree next) {
+        nexts.add(next);
     }
     public int c_impl(Set<Integer> S) {
-        return left.c(S) + right.c(S) - S.size();
+        int sum = 0;
+        for (NiceTree n: nexts) sum += n.c(S);
+        return sum - (S.size() * (nexts.size()-1));
     }
 }
 
@@ -115,7 +113,19 @@ class UglyTree {
         nodes.add(n);
     }
     public NiceTree niceify() {
-        if (childs.size() == 1) {
+        if (childs.size() == 0) {
+            NiceChain[] chain = new NiceChain[nodes.size()];
+            int i = 0;
+            for (int idx: nodes) {
+                chain[i] = new NiceIntroduce(idx);
+                i++;
+            }
+            for (int idx = 0; idx < i-1; idx++) {
+                chain[idx].setNext(chain[idx+1]);
+            }
+            chain[i-1].setNext(new NiceLeaf());
+            return chain[0];
+        } else if (childs.size() == 1) {
             UglyTree other = childs.get(0);
             Set<Integer> f = new HashSet<>(nodes);
             Set<Integer> a = new HashSet<>(other.nodes);
@@ -136,8 +146,13 @@ class UglyTree {
             }
             chain[i-1].setNext(other.niceify());
             return chain[0];
+        } else {
+            NiceJoin join = new NiceJoin();
+            for (UglyTree c: childs) {
+                join.addNext(c.niceify());
+            }
+            return join;
         }
-        return null;
     }
     public String toString() {return "Bag"+idx;}
 }
