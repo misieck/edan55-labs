@@ -65,7 +65,7 @@ class NiceIntroduce extends NiceTree {
     }
 }
 
-class NiceRemove extends NiceTree {
+class NiceForget extends NiceTree {
     int removed;
     NiceTree next;
     public void setIntroduced(int removed) {
