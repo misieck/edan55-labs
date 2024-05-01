@@ -79,6 +79,7 @@ public class TreeWidth {
             //zero.addChild(root);
             NiceTree nice = root.niceify();
             printTree(root);
+            System.out.println(nice.c(new HashSet<>()));
     }
 
     public static void printTree(Tree tree) {
@@ -124,7 +125,7 @@ abstract class Tree{
 abstract class NiceTree extends Tree {
     Map<Set<Integer>, Integer> cache = new HashMap<Set<Integer>,Integer>();
     public int c(Set<Integer> S) {
-        System.out.println(S);
+        //System.out.println(S);
         if (cache.containsKey(S)) {System.out.println("Cached value found");return cache.get(S);}
         int res = c_impl(S);
         cache.put(S, res);
@@ -178,7 +179,7 @@ abstract class NiceChain extends NiceTree{
 
 class NiceLeaf extends NiceTree {
     public int c_impl(Set<Integer> S) {
-        System.out.println("Leaf reached");
+        //System.out.println("Leaf reached");
         if (S.size() != 0) System.out.println("ERROR: S is not empty when it reached Leaf");
         return 0;
     }
@@ -198,15 +199,15 @@ class NiceIntroduce extends NiceChain {
         this.introduced = introduced;
     }
     public int c_impl(Set<Integer> S) {
-        System.out.print("Introduce node for " + introduced);
+        //System.out.print("Introduce node for " + introduced);
         if (S.contains(introduced)) {
-            System.out.println(", which was found in S");
+            //System.out.println(", which was found in S");
             Set<Integer> Sr = new HashSet<Integer>(S);
             Sr.remove(introduced);
             return next.c(Sr) + 1;
         }
         else {
-            System.out.println(", which was not found in S");
+            //System.out.println(", which was not found in S");
             return next.c(S);
         }
     }
@@ -220,16 +221,16 @@ class NiceForget extends NiceChain {
         this.removed = removed;
     }
     public int c_impl(Set<Integer> S) {
-        System.out.println("Forget node for " + removed);
+        //System.out.println("Forget node for " + removed);
         if (Nodes.containsAny(removed, S)) {
-            System.out.println("Not added to avoid the terrors");
+            //System.out.println("Not added to avoid the terrors");
             return next.c(S);
         }
         Set<Integer> Sr = new HashSet<>(S);
         Sr.add(removed);
-        System.out.println("--TESTING ADD FOR "+removed+"--");
+        //System.out.println("--TESTING ADD FOR "+removed+"--");
         int r1 = 1 + next.c(Sr);
-        System.out.println("--TESTING NOT FOR "+removed+"--");
+        //System.out.println("--TESTING NOT FOR "+removed+"--");
         int r2 = next.c(S);
         return Math.max(r1, r2);
     }
@@ -244,10 +245,10 @@ class NiceJoin extends NiceTree {
     }
 
     public int c_impl(Set<Integer> S) {
-        System.out.println("BRANCH FOUND");
+        //System.out.println("BRANCH FOUND");
         int sum = 0;
         for (NiceTree n: nexts) {
-            System.out.println("Next branch!");
+            //System.out.println("Next branch!");
             sum += n.c(S);
         }
         System.out.println("sum="+sum+",S="+S.toString()+"nexts="+nexts.size());
