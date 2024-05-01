@@ -28,6 +28,7 @@ public class TreeWidth {
                     n = Integer.parseInt(line[2]);
                     e = Integer.parseInt(line[3]); // don't think this is needed tbh
                     Nodes.setSize(n);
+                    System.out.println("Size="+n);
                 }
                 else {
                     int n1 = Integer.parseInt(line[0]);
@@ -71,16 +72,16 @@ public class TreeWidth {
             //UglyTree zero = new UglyTree(-1);
 
             //Random random = new Random(32434);
-            for (boolean[] bol: Nodes.connected) {
-                System.out.println(Arrays.toString(bol));
-            }
+            //for (boolean[] bol: Nodes.connected) {
+            //    System.out.println(Arrays.toString(bol));
+            //}
             UglyTree root = tree[0]; //random.nextInt(tree.length)];
             root.addChild(tree[1]);
             //zero.addChild(root);
             NiceTree nice = root.niceify();
-            System.out.println(nice.c(new HashSet<>()));
-            root.printTree();
-            nice.printTree();
+            System.out.println("Score="+nice.c(new HashSet<>()));
+            //root.printTree();
+            //nice.printTree();
     }
 
 
@@ -238,7 +239,7 @@ class NiceForget extends NiceChain {
         int r1 = next.c(Sr);
         //System.out.println("--TESTING NOT FOR "+removed+"--");
         int r2 = next.c(S);
-        System.out.println(S+"+["+removed+"]="+r1+" or "+r2);
+        //System.out.println(S+"+["+removed+"]="+r1+" or "+r2);
         return Math.max(r1, r2);
     }
     public String toString() {return "NiceForget: "+ removed + ", ";}
@@ -258,7 +259,7 @@ class NiceJoin extends NiceTree {
             //System.out.println("Next branch!");
             sum += n.c(S);
         }
-        System.out.println("sum="+sum+",S="+S.toString()+"nexts="+nexts.size());
+        //System.out.println("sum="+sum+",S="+S.toString()+"nexts="+nexts.size());
         return sum - (S.size() * (nexts.size()-1));
     }
 
