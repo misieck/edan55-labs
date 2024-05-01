@@ -57,8 +57,8 @@ public class TreeWidth {
                     b = Integer.parseInt(line[2]);
                     w = Integer.parseInt(line[3]); // still not sure this is needed
                     v = Integer.parseInt(line[3]); // pretty sure this will always be = n so REALLY not needed
-                    tree = new UglyTree[b];
-                    for (int i = 0; i < b; i++) {
+                    tree = new UglyTree[b+1];
+                    for (int i = 0; i <= b; i++) {
                         tree[i] = new UglyTree(i);
                     }
                 }
