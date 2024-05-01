@@ -11,7 +11,7 @@ import java.io.FileNotFoundException;
 
 public class TreeWidth {
     public static void checkAssert() throws RuntimeException {
-        boolean assertsEnabled = true;
+        boolean assertsEnabled = false;
         assert assertsEnabled = true; // Intentional side effect!!!
         if (!assertsEnabled)
             throw new RuntimeException("Asserts must be enabled!!!");
@@ -19,7 +19,7 @@ public class TreeWidth {
 
     public static void main(String args[]) throws FileNotFoundException{
 
-        checkAssert();
+        //checkAssert();
         Scanner input = new Scanner(System.in);
         String f = input.nextLine();
         input.close();
@@ -82,12 +82,9 @@ public class TreeWidth {
             UglyTree root = tree[0]; //random.nextInt(tree.length)];
             root.addChild(tree[1]);
             //zero.addChild(root);
+            NiceTree r = root.niceify();
             printUgly(root);
-
-
-
-
-
+            System.out.println(r.c(new HashSet<>()));
     }
 
     public static void printUgly(UglyTree tree){
@@ -233,12 +230,16 @@ class UglyTree {
 
     public void addChild(UglyTree n) {
         childs.add(n);
+        n.childs.add(this);
     }
 
     public void addNode(int n) {
         nodes.add(n);
     }
-
+    public NiceTree niceify(UglyTree prev) {
+        childs.remove(prev);
+        return niceify();
+    }
     public NiceTree niceify() {
         if (childs.size() == 0) {
             NiceChain[] chain = new NiceChain[nodes.size()];
@@ -271,12 +272,12 @@ class UglyTree {
             for (int idx = 0; idx < i-1; idx++) {
                 chain[idx].setNext(chain[idx+1]);
             }
-            chain[i-1].setNext(other.niceify());
+            chain[i-1].setNext(other.niceify(this));
             return chain[0];
         } else {
             NiceJoin join = new NiceJoin();
             for (UglyTree c: childs) {
-                join.addNext(c.niceify());
+                join.addNext(c.niceify(this));
             }
             return join;
         }
