@@ -80,10 +80,15 @@ public class TreeWidth {
             printTree(root);
     }
 
-    public static void printTree(Tree tree){
-        System.out.println(tree);
+    public static void printTree(Tree tree) {
+        printTree(tree, 0);
+    }
+    public static void printTree(Tree tree, int level){
+       // level *= 3;
+        String indent = new String(new char[level]).replace("\0", " ");
+        System.out.println(indent + tree.toString());
         for (Tree child:tree.getChildren()){
-            printTree(child);
+            printTree(child, level + 1);
         }
 
     }
