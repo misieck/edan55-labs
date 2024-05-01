@@ -37,6 +37,13 @@ abstract class NiceTree {
     public abstract int c_impl(Set<Integer> S);
 }
 
+abstract class NiceChain extends NiceTree{
+    NiceTree next;
+    public void setNext(NiceTree next) {
+        this.next = next;
+    }
+}
+
 class NiceLeaf extends NiceTree {
     public int c_impl(Set<Integer> S) {
         if (S.size() != 0) System.out.println("ERROR: S is not empty when it reached Leaf");
@@ -44,14 +51,10 @@ class NiceLeaf extends NiceTree {
     }
 }
 
-class NiceIntroduce extends NiceTree {
+class NiceIntroduce extends NiceChain {
     int introduced;
-    NiceTree next;
-    public void setIntroduced(int introduced) {
+    public NiceIntroduce(int introduced) {
         this.introduced = introduced;
-    }
-    public void setNext(NiceTree next) {
-        this.next = next;
     }
     public int c_impl(Set<Integer> S) {
         if (S.contains(introduced)) {
@@ -65,14 +68,10 @@ class NiceIntroduce extends NiceTree {
     }
 }
 
-class NiceForget extends NiceTree {
+class NiceForget extends NiceChain {
     int removed;
-    NiceTree next;
-    public void setIntroduced(int removed) {
+    public NiceForget(int removed) {
         this.removed = removed;
-    }
-    public void setNext(NiceTree next) {
-        this.next = next;
     }
     public int c_impl(Set<Integer> S) {
         if (Nodes.containsAny(removed, S)) {
@@ -103,17 +102,42 @@ class NiceJoin extends NiceTree {
 class UglyTree {
     int idx;
     ArrayList<UglyTree> childs;
-    ArrayList<Integer> nodes;
+    HashSet<Integer> nodes;
     public UglyTree(int i) {
         idx = i;
         childs = new ArrayList<UglyTree>();
-        nodes = new ArrayList<Integer>();
+        nodes = new HashSet<Integer>();
     }
     public void addChild(UglyTree n) {
         childs.add(n);
     }
     public void addNode(int n) {
         nodes.add(n);
+    }
+    public NiceTree niceify() {
+        if (childs.size() == 1) {
+            UglyTree other = childs.get(0);
+            Set<Integer> f = new HashSet<>(nodes);
+            Set<Integer> a = new HashSet<>(other.nodes);
+            f.removeAll(a);
+            a.removeAll(nodes);
+            NiceChain[] chain = new NiceChain[f.size() + a.size()];
+            int i = 0;
+            for (int idx: f) {
+                chain[i] = new NiceForget(idx);
+                i++;
+            }
+            for (int idx: a) {
+                chain[i] = new NiceIntroduce(idx);
+                i++;
+            }
+            for (int idx = 0; idx < i-1; idx++) {
+                chain[idx].setNext(chain[idx+1]);
+            }
+            chain[i-1].setNext(other.niceify());
+            return chain[0];
+        }
+        return null;
     }
     public String toString() {return "Bag"+idx;}
 }
