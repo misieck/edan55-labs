@@ -66,7 +66,8 @@ public class TreeWidth {
                     int size = line.length;
                     int idx = Integer.parseInt(line[1]);
                     for (int i = 2; i < size; i++) {
-                        tree[idx].addNode(i);
+                        int toAdd = Integer.parseInt(line[i]);
+                        tree[idx].addNode(toAdd);
                     }
                 }
                 else {
@@ -75,12 +76,12 @@ public class TreeWidth {
                     tree[n1-1].addChild(tree[n2-1]);
                 }
             }
-            UglyTree zero = new UglyTree(-1);
+            //UglyTree zero = new UglyTree(-1);
 
-            Random random = new Random(32434);
+            //Random random = new Random(32434);
             UglyTree root = tree[0]; //random.nextInt(tree.length)];
-            zero.addChild(root);
-            printUgly(zero);
+            //zero.addChild(root);
+            printUgly(root);
 
 
 
