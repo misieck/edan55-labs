@@ -266,6 +266,8 @@ class NiceJoin extends NiceTree {
         NiceTree[] ret = nexts.toArray(new NiceTree[0]);
         return ret;
     }
+
+    public String toString(){return "NiceJoin: " + nexts;}
 }
 
 class UglyTree extends Tree{
