@@ -118,8 +118,10 @@ abstract class Tree{
         // level *= 3;
         String indent = new String(new char[level]).replace("\0", " ");
         System.out.println(indent + tree.toString());
+        int chldCount = tree.getChildren().length;
         for (Tree child:tree.getChildren()){
-            printTree(child, level + 1);
+            int newLevel = chldCount > 1 ? level +1: level;
+            printTree(child, newLevel);
         }
 
     }
