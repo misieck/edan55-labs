@@ -21,20 +21,18 @@ public class TreeWidth {
         File T = new File("data/" + f + ".td");
             int n,e;
             Scanner sg = new Scanner(G);
-            Node[] node = null;
             while (sg.hasNextLine()) {
                 String[] line = sg.nextLine().split(" ");
                 if (line[0].equals("c")) continue;
                 if (line[0].equals("p")) {
-                    assert (node == null) ;
                     n = Integer.parseInt(line[2]);
                     e = Integer.parseInt(line[3]); // don't think this is needed tbh
-                    //Nodes.setSize(n);
+                    Nodes.setSize(n);
                 }
                 else {
                     int n1 = Integer.parseInt(line[0]);
                     int n2 = Integer.parseInt(line[1]);
-                    //Nodes.connect(n1, n2);
+                    Nodes.connect(n1, n2);
                 }
             }
             int b,w,v; // Bags, Width, vertexes
@@ -73,6 +71,9 @@ public class TreeWidth {
             //UglyTree zero = new UglyTree(-1);
 
             //Random random = new Random(32434);
+            for (boolean[] bol: Nodes.connected) {
+                System.out.println(Arrays.toString(bol));
+            }
             UglyTree root = tree[0]; //random.nextInt(tree.length)];
             root.addChild(tree[1]);
             //zero.addChild(root);
@@ -98,7 +99,7 @@ public class TreeWidth {
 class Nodes {
     static boolean[][] connected;
     public static void setSize(int size) {
-        connected = new boolean[size][size];
+        connected = new boolean[size+1][size+1];
     }
     public static void connect(int x, int y) {
         connected[x][y] = true;
@@ -123,7 +124,8 @@ abstract class Tree{
 abstract class NiceTree extends Tree {
     Map<Set<Integer>, Integer> cache = new HashMap<Set<Integer>,Integer>();
     public int c(Set<Integer> S) {
-        if (cache.containsKey(S)) return cache.get(S);
+        System.out.println(S);
+        if (cache.containsKey(S)) {System.out.println("Cached value found");return cache.get(S);}
         int res = c_impl(S);
         cache.put(S, res);
         return res;
@@ -133,7 +135,6 @@ abstract class NiceTree extends Tree {
 
 
 /*
-
     static NiceTree makeChains(UglyTree ugly, NiceTree start) {
         assert(ugly.childs.size() == 1);
         UglyTree other = ugly.childs.get(0);
@@ -177,6 +178,7 @@ abstract class NiceChain extends NiceTree{
 
 class NiceLeaf extends NiceTree {
     public int c_impl(Set<Integer> S) {
+        System.out.println("Leaf reached");
         if (S.size() != 0) System.out.println("ERROR: S is not empty when it reached Leaf");
         return 0;
     }
@@ -191,17 +193,20 @@ class NiceLeaf extends NiceTree {
 }
 
 class NiceIntroduce extends NiceChain {
-    int introduced;
+    Integer introduced;
     public NiceIntroduce(int introduced) {
         this.introduced = introduced;
     }
     public int c_impl(Set<Integer> S) {
+        System.out.print("Introduce node for " + introduced);
         if (S.contains(introduced)) {
+            System.out.println(", which was found in S");
             Set<Integer> Sr = new HashSet<Integer>(S);
             Sr.remove(introduced);
             return next.c(Sr) + 1;
         }
         else {
+            System.out.println(", which was not found in S");
             return next.c(S);
         }
     }
@@ -210,17 +215,21 @@ class NiceIntroduce extends NiceChain {
 }
 
 class NiceForget extends NiceChain {
-    int removed;
+    Integer removed;
     public NiceForget(int removed) {
         this.removed = removed;
     }
     public int c_impl(Set<Integer> S) {
+        System.out.println("Forget node for " + removed);
         if (Nodes.containsAny(removed, S)) {
+            System.out.println("Not added to avoid the terrors");
             return next.c(S);
         }
         Set<Integer> Sr = new HashSet<>(S);
         Sr.add(removed);
+        System.out.println("--TESTING ADD FOR "+removed+"--");
         int r1 = 1 + next.c(Sr);
+        System.out.println("--TESTING NOT FOR "+removed+"--");
         int r2 = next.c(S);
         return Math.max(r1, r2);
     }
@@ -235,8 +244,13 @@ class NiceJoin extends NiceTree {
     }
 
     public int c_impl(Set<Integer> S) {
+        System.out.println("BRANCH FOUND");
         int sum = 0;
-        for (NiceTree n: nexts) sum += n.c(S);
+        for (NiceTree n: nexts) {
+            System.out.println("Next branch!");
+            sum += n.c(S);
+        }
+        System.out.println("sum="+sum+",S="+S.toString()+"nexts="+nexts.size());
         return sum - (S.size() * (nexts.size()-1));
     }
 
@@ -284,53 +298,58 @@ class UglyTree extends Tree{
             for (int idx = 0; idx < i-1; idx++) {
                 chain[idx].setNext(chain[idx+1]);
             }
+            if (i == 0) return new NiceLeaf();
             chain[i-1].setNext(new NiceLeaf());
             return chain[0];
         } else if (childs.size() == 1) {
             UglyTree other = childs.get(0);
-            Set<Integer> toIntroduce = new HashSet<>(nodes);
-            Set<Integer> toForget = new HashSet<>(other.nodes);
-            toIntroduce.removeAll(other.nodes);
-            toForget.removeAll(nodes);
+            Set<Integer> toForget = new HashSet<>(nodes);
+            Set<Integer> toIntroduce = new HashSet<>(other.nodes);
+            toForget.removeAll(other.nodes);
+            toIntroduce.removeAll(nodes);
             NiceChain[] chain = new NiceChain[toIntroduce.size() + toForget.size()];
             int i = 0;
-            for (int idx: toIntroduce) {
-                chain[i] = new NiceForget(idx);
-                i++;
-            }
             for (int idx: toForget) {
                 chain[i] = new NiceIntroduce(idx);
+                i++;
+            }
+            for (int idx: toIntroduce) {
+                chain[i] = new NiceForget(idx);
                 i++;
             }
             for (int idx = 0; idx < i-1; idx++) {
                 chain[idx].setNext(chain[idx+1]);
             }
+            if (i == 0) return other.niceify(this);
             chain[i-1].setNext(other.niceify(this));
             return chain[0];
         } else {
             NiceJoin join = new NiceJoin();
-            for (UglyTree c: childs) {
-                join.addNext(c.niceify(this));
+            for (UglyTree other: childs) {
+                Set<Integer> toForget = new HashSet<>(nodes);
+                Set<Integer> toIntroduce = new HashSet<>(other.nodes);
+                toForget.removeAll(other.nodes);
+                toIntroduce.removeAll(nodes);
+                NiceChain[] chain = new NiceChain[toIntroduce.size() + toForget.size()];
+                int i = 0;
+                for (int idx: toForget) {
+                    chain[i] = new NiceIntroduce(idx);
+                    i++;
+                }
+                for (int idx: toIntroduce) {
+                    chain[i] = new NiceForget(idx);
+                    i++;
+                }
+                for (int idx = 0; idx < i-1; idx++) {
+                    chain[idx].setNext(chain[idx+1]);
+                }
+                if (i == 0) return other.niceify(this);
+                chain[i-1].setNext(other.niceify(this));
+                join.addNext(chain[0]);
             }
             return join;
         }
     }
     public String toString() {return "Ugly: "+idx + ", " + nodes;}
 }
-
-class Node {
-    int idx;
-    ArrayList<Node> connected;
-	public Node(int i) {
-        idx = i;
-        connected = new ArrayList<Node>();
-    }
-    public void addNeighbor(Node n) {
-        if (connected.contains(n)) return;
-        connected.add(n);
-        n.connected.add(this);
-    }
-    public String toString() {return "Node"+idx;}
-}
-
 
