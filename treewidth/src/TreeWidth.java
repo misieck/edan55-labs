@@ -100,19 +100,19 @@ class NiceJoin extends NiceTree {
     }
 }
 
-class Bag {
+class UglyTree {
     int idx;
-    ArrayList<Bag> childs;
-    ArrayList<Node> nodes;
-    public Bag(int i) {
+    ArrayList<UglyTree> childs;
+    ArrayList<Integer> nodes;
+    public UglyTree(int i) {
         idx = i;
-        childs = new ArrayList<Bag>();
-        nodes = new ArrayList<Node>();
+        childs = new ArrayList<UglyTree>();
+        nodes = new ArrayList<Integer>();
     }
-    public void addChild(Bag n) {
+    public void addChild(UglyTree n) {
         childs.add(n);
     }
-    public void addNode(Node n) {
+    public void addNode(int n) {
         nodes.add(n);
     }
     public String toString() {return "Bag"+idx;}
@@ -151,44 +151,41 @@ public class TreeWidth {
                     if (node != null) throw(new Exception());
                     n = Integer.parseInt(line[2]);
                     e = Integer.parseInt(line[3]); // don't think this is needed tbh
-                    node = new Node[n];
-                    for (int i = 0; i < n; i++) {
-                        node[i] = new Node(i);
-                    }
+                    Nodes.setSize(n);;
                 }
                 else {
                     int n1 = Integer.parseInt(line[0]);
                     int n2 = Integer.parseInt(line[1]);
-                    node[n1].addNeighbor(node[n2]);
+                    Nodes.connect(n1, n2);
                 }
             }
             int b,w,v; // Bags, Width, vertexes
             Scanner st = new Scanner(G);
-            Bag[] bag = null;
+            UglyTree[] tree = null;
             while (sg.hasNextLine()) {
                 String[] line = sg.nextLine().split(" ");
                 if (line[0].equals("c")) continue;
                 if (line[0].equals("s")) {
-                    if (bag != null) throw(new Exception());
+                    if (tree != null) throw(new Exception());
                     b = Integer.parseInt(line[2]);
                     w = Integer.parseInt(line[3]); // still not sure this is needed
                     v = Integer.parseInt(line[3]); // pretty sure this will always be = n so REALLY not needed
-                    bag = new Bag[b];
+                    tree = new UglyTree[b];
                     for (int i = 0; i < b; i++) {
-                        bag[i] = new Bag(i);
+                        tree[i] = new UglyTree(i);
                     }
                 }
                 else if (line[0].equals("b")) {
                     int size = line.length;
                     int idx = Integer.parseInt(line[1]);
                     for (int i = 2; i < size; i++) {
-                        bag[idx].addNode(node[i]);
+                        tree[idx].addNode(i);
                     }
                 }
                 else {
                     int n1 = Integer.parseInt(line[0]);
                     int n2 = Integer.parseInt(line[1]);
-                    bag[n1].addChild(bag[n2]);
+                    tree[n1].addChild(tree[n2]);
                 }
             }
         }
