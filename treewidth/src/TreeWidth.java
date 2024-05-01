@@ -78,22 +78,11 @@ public class TreeWidth {
             root.addChild(tree[1]);
             //zero.addChild(root);
             NiceTree nice = root.niceify();
-            printTree(root);
             System.out.println(nice.c(new HashSet<>()));
+            root.printTree();
     }
 
-    public static void printTree(Tree tree) {
-        printTree(tree, 0);
-    }
-    public static void printTree(Tree tree, int level){
-       // level *= 3;
-        String indent = new String(new char[level]).replace("\0", " ");
-        System.out.println(indent + tree.toString());
-        for (Tree child:tree.getChildren()){
-            printTree(child, level + 1);
-        }
 
-    }
 }
 
 
@@ -120,13 +109,26 @@ class Nodes {
 abstract class Tree{
 
     abstract public Tree[] getChildren();
+
+    public void printTree() {
+        printTree(this, 0);
+    }
+    public static void printTree( Tree tree, int level){
+        // level *= 3;
+        String indent = new String(new char[level]).replace("\0", " ");
+        System.out.println(indent + tree.toString());
+        for (Tree child:tree.getChildren()){
+            printTree(child, level + 1);
+        }
+
+    }
 }
 
 abstract class NiceTree extends Tree {
     Map<Set<Integer>, Integer> cache = new HashMap<Set<Integer>,Integer>();
     public int c(Set<Integer> S) {
         //System.out.println(S);
-        if (cache.containsKey(S)) {System.out.println("Cached value found");return cache.get(S);}
+        if (cache.containsKey(S)) return cache.get(S);
         int res = c_impl(S);
         cache.put(S, res);
         return res;
