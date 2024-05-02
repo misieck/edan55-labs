@@ -1,10 +1,9 @@
 
-import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Set;
 
 
-public class BitSetTest {
+public class BitSet {
     public static long myOperation (long bitset, int idx, long max){
         if (idx >= max)
             return bitset;
@@ -16,7 +15,7 @@ public class BitSetTest {
         return 1 + myOperation(bitset, idx+1, max) + myOperation(bitset2, idx+2, max/2);
     }
 
-    public static long jOperation (BitSet jset, int idx, long max){
+    public static long jOperation (java.util.BitSet jset, int idx, long max){
         if (idx >= max) {
             long[] a = jset.toLongArray();
             return a.length == 0? 0: a[0];
@@ -26,7 +25,7 @@ public class BitSetTest {
         }
         var cpy = jset.clone();
         jset.set(idx%64);
-        return 1 + jOperation( (BitSet) cpy, idx+1, max ) + jOperation(jset, idx+2, max/2);
+        return 1 + jOperation( (java.util.BitSet) cpy, idx+1, max ) + jOperation(jset, idx+2, max/2);
     }
 
     public static long setOperation (Set<Integer> set, int idx, long max){
@@ -85,7 +84,7 @@ public class BitSetTest {
 
 
         duration = 0;
-        BitSet jset = new BitSet(64);
+        java.util.BitSet jset = new java.util.BitSet(64);
         Set<Integer> set = new HashSet<>(64);
         for (long i = 0; i<iters; i++){
             long index = i % 64;
@@ -144,5 +143,7 @@ class MyBitSet{
     public static boolean get(long bitset, long index){
         return ((bitset >>> index) & 0x1L) == 1L;
     }
-
 }
+
+
+
