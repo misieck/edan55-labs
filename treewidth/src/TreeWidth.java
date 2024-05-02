@@ -1,7 +1,12 @@
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.io.File;
+import java.io.IOException;
 import java.io.FileNotFoundException;
-
+import java.util.stream.*;
 
 public class TreeWidth {
     public static void checkAssert() throws RuntimeException {
@@ -10,78 +15,147 @@ public class TreeWidth {
         if (!assertsEnabled)
             throw new RuntimeException("Asserts must be enabled!!!");
     }
+    public static Set<String> listFilesUsingJavaIO(String dir) {
+        return Stream.of(new File(dir).listFiles())
+                .filter(file -> !file.isDirectory())
+                .map(File::getName)
+                .collect(Collectors.toSet());
+    }
 
-    public static void main(String args[]) throws FileNotFoundException{
+    public static Set<String> listFilesUsingDirectoryStream(String dir) throws IOException {
+        Set<String> fileSet = new HashSet<>();
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(dir))) {
+            for (Path path : stream) {
+                if (!Files.isDirectory(path)) {
+                    fileSet.add(path.getFileName()
+                            .toString());
+                }
+            }
+        }
+        return fileSet;
+    }
 
-        //checkAssert();
+    public static Set<String> listFilesUsingFilesList(String dir) throws IOException {
+        try (Stream<Path> stream = Files.list(Paths.get(dir))) {
+            return stream
+                    .filter(file -> !Files.isDirectory(file))
+                    .map(Path::getFileName)
+                    .map(Path::toString)
+                    .filter(path -> path.endsWith(".td"))
+                    .map(path-> path.substring(0, path.length() -3))
+                    .collect(Collectors.toSet());
+        }
+    }
+
+    public static void main(String args[]) throws IOException{
+        if (args.length == 1 )  {
+            String input = args[0]; //getInputName();
+            System.out.print(input);
+            long start = System.nanoTime();
+            int res = executeOnData(input);
+            long duration = System.nanoTime() - start;
+            System.out.println(", "+res+", " + duration/1000000);
+        }
+        else {
+            Set <String> names = listFilesUsingFilesList("data");
+
+            for (String input: names) {
+                System.out.print(input);
+                long start = System.nanoTime();
+                int res = executeOnData(input);
+                long duration = System.nanoTime() - start;
+                System.out.println(", "+res+", " + duration/1000000);
+            }
+        }
+
+    }
+
+    private static String getInputName() {
         Scanner input = new Scanner(System.in);
         String f = input.nextLine();
         input.close();
+        return f;
+    }
+
+    private static int executeOnData(String f) throws FileNotFoundException {
+
         File G = new File("data/" + f + ".gr");
         File T = new File("data/" + f + ".td");
-            int n,e;
-            Scanner sg = new Scanner(G);
-            while (sg.hasNextLine()) {
-                String[] line = sg.nextLine().split(" ");
-                if (line[0].equals("c")) continue;
-                if (line[0].equals("p")) {
-                    n = Integer.parseInt(line[2]);
-                    e = Integer.parseInt(line[3]); // don't think this is needed tbh
-                    Nodes.setSize(n);
-                    System.out.println("Size="+n);
-                }
-                else {
-                    int n1 = Integer.parseInt(line[0]);
-                    int n2 = Integer.parseInt(line[1]);
-                    Nodes.connect(n1, n2);
+
+        readGraph(G);
+        UglyTree[] tree = readUglyTree(T);
+        //UglyTree zero = new UglyTree(-1);
+
+        // Random random = new Random(32434);
+           /* for (boolean[] bol: Nodes.connected) {
+                System.out.println(Arrays.toString(bol));
+            }
+            */
+        if (tree.length<2) return 1;
+        UglyTree root = tree[0]; //random.nextInt(tree.length)];
+        root.addChild(tree[1]);
+        //zero.addChild(root);
+
+        //root.printTree();
+        NiceTree nice = root.niceify();
+        //nice.printTree();
+        return nice.c(new HashSet<>());
+    }
+
+    private static void readGraph(File G) throws FileNotFoundException {
+        int n,e;
+        Scanner sg = new Scanner(G);
+        while (sg.hasNextLine()) {
+            String[] line = sg.nextLine().split(" ");
+            if (line[0].equals("c")) continue;
+            if (line[0].equals("p")) {
+                n = Integer.parseInt(line[2]);
+                e = Integer.parseInt(line[3]); // don't think this is needed tbh
+                Nodes.setSize(n);
+            }
+            else {
+                int n1 = Integer.parseInt(line[0]);
+                int n2 = Integer.parseInt(line[1]);
+                Nodes.connect(n1, n2);
+            }
+        }
+    }
+
+    private static UglyTree[] readUglyTree(File T) throws FileNotFoundException {
+        int b,w,v; // Bags, Width, vertexes
+        Scanner st = new Scanner(T);
+        UglyTree[] tree = null;
+        while (st.hasNextLine()) {
+            String[] line = st.nextLine().split(" ");
+            //for (String str: line) System.out.print(str + " ");
+            //System.out.println("");
+            if (line[0].equals("c")) continue;
+            if (line[0].equals("s")) {
+
+                assert (tree == null) ;
+                b = Integer.parseInt(line[2]);
+                w = Integer.parseInt(line[3]); // still not sure this is needed
+                v = Integer.parseInt(line[3]); // pretty sure this will always be = n so REALLY not needed
+                tree = new UglyTree[b+1];
+                for (int i = 0; i <= b; i++) {
+                    tree[i] = new UglyTree(i);
                 }
             }
-            int b,w,v; // Bags, Width, vertexes
-            Scanner st = new Scanner(T);
-            UglyTree[] tree = null;
-            while (st.hasNextLine()) {
-                String[] line = st.nextLine().split(" ");
-                //for (String str: line) System.out.print(str + " ");
-                //System.out.println("");
-                if (line[0].equals("c")) continue;
-                if (line[0].equals("s")) {
-
-                    assert (tree == null) ;
-                    b = Integer.parseInt(line[2]);
-                    w = Integer.parseInt(line[3]); // still not sure this is needed
-                    v = Integer.parseInt(line[3]); // pretty sure this will always be = n so REALLY not needed
-                    tree = new UglyTree[b+1];
-                    for (int i = 0; i <= b; i++) {
-                        tree[i] = new UglyTree(i);
-                    }
-                }
-                else if (line[0].equals("b")) {
-                    int size = line.length;
-                    int idx = Integer.parseInt(line[1]);
-                    for (int i = 2; i < size; i++) {
-                        int toAdd = Integer.parseInt(line[i]);
-                        tree[idx].addNode(toAdd);
-                    }
-                }
-                else {
-                    int n1 = Integer.parseInt(line[0]);
-                    int n2 = Integer.parseInt(line[1]);
-                    tree[n1].addChild(tree[n2]);
+            else if (line[0].equals("b")) {
+                int size = line.length;
+                int idx = Integer.parseInt(line[1]);
+                for (int i = 2; i < size; i++) {
+                    int toAdd = Integer.parseInt(line[i]);
+                    tree[idx].addNode(toAdd);
                 }
             }
-            //UglyTree zero = new UglyTree(-1);
-
-            //Random random = new Random(32434);
-            //for (boolean[] bol: Nodes.connected) {
-            //    System.out.println(Arrays.toString(bol));
-            //}
-            UglyTree root = tree[0]; //random.nextInt(tree.length)];
-            root.addChild(tree[1]);
-            //zero.addChild(root);
-            NiceTree nice = root.niceify();
-            System.out.println("Score="+nice.c(new HashSet<>()));
-            //root.printTree();
-            //nice.printTree();
+            else {
+                int n1 = Integer.parseInt(line[0]);
+                int n2 = Integer.parseInt(line[1]);
+                tree[n1].addChild(tree[n2]);
+            }
+        }
+        return tree;
     }
 
 
@@ -111,6 +185,7 @@ class Nodes {
 abstract class Tree{
 
     abstract public Tree[] getChildren();
+    boolean visited = false;
 
     public void printTree() {
         printTree(this, 0);
@@ -120,9 +195,12 @@ abstract class Tree{
         String indent = new String(new char[level]).replace("\0", " ");
         System.out.println(indent + tree.toString());
         int chldCount = tree.getChildren().length;
+        tree.visited = true;
         for (Tree child:tree.getChildren()){
             int newLevel = chldCount > 1 ? level +1: level;
-            printTree(child, newLevel);
+            if (!child.visited) {
+                printTree(child, newLevel);
+            }
         }
 
     }
@@ -140,36 +218,6 @@ abstract class NiceTree extends Tree {
     }
     public abstract int c_impl(Set<Integer> S);
 
-
-
-/*
-    static NiceTree makeChains(UglyTree ugly, NiceTree start) {
-        assert(ugly.childs.size() == 1);
-        UglyTree other = ugly.childs.get(0);
-        Set<Integer> toIntroduce = new HashSet<Integer>(ugly.nodes);
-        Set<Integer> toForget = new HashSet<Integer>(other.nodes);
-        toIntroduce.removeAll(other.nodes);
-        toForget.removeAll(ugly.nodes);
-        return _makeChains(start, toIntroduce, toForget);
-    }
-
-    static NiceTree _makeChains(NiceTree start, Set<Integer> toIntroduce, Set<Integer> toForget)
-    {
-        NiceTree prev = start;
-
-        for (int n: toIntroduce) {
-            var node = new NiceIntroduce(n);
-            prev. setNext(node);
-            prev = node;
-        }
-
-        for (int n: toForget) {
-            var node = new NiceForget(n);
-            prev.setNext(node);
-            prev = node;
-        }
-        return prev;
-    }*/
 }
 
 abstract class NiceChain extends NiceTree{
@@ -239,7 +287,7 @@ class NiceForget extends NiceChain {
         int r1 = next.c(Sr);
         //System.out.println("--TESTING NOT FOR "+removed+"--");
         int r2 = next.c(S);
-        //System.out.println(S+"+["+removed+"]="+r1+" or "+r2);
+           //     System.out.println(S+"+["+removed+"]="+r1+" or "+r2);
         return Math.max(r1, r2);
     }
     public String toString() {return "NiceForget: "+ removed + ", ";}
@@ -259,7 +307,7 @@ class NiceJoin extends NiceTree {
             //System.out.println("Next branch!");
             sum += n.c(S);
         }
-        //System.out.println("sum="+sum+",S="+S.toString()+"nexts="+nexts.size());
+       // System.out.println("sum="+sum+",S="+S.toString()+"nexts="+nexts.size());
         return sum - (S.size() * (nexts.size()-1));
     }
 
@@ -298,6 +346,7 @@ class UglyTree extends Tree{
         childs.remove(prev);
         return niceify();
     }
+
     public NiceTree niceify() {
         if (childs.size() == 0) {
             NiceChain[] chain = new NiceChain[nodes.size()];
@@ -314,53 +363,40 @@ class UglyTree extends Tree{
             return chain[0];
         } else if (childs.size() == 1) {
             UglyTree other = childs.get(0);
-            Set<Integer> toForget = new HashSet<>(nodes);
-            Set<Integer> toIntroduce = new HashSet<>(other.nodes);
-            toForget.removeAll(other.nodes);
-            toIntroduce.removeAll(nodes);
-            NiceChain[] chain = new NiceChain[toIntroduce.size() + toForget.size()];
-            int i = 0;
-            for (int idx: toForget) {
-                chain[i] = new NiceIntroduce(idx);
-                i++;
-            }
-            for (int idx: toIntroduce) {
-                chain[i] = new NiceForget(idx);
-                i++;
-            }
-            for (int idx = 0; idx < i-1; idx++) {
-                chain[idx].setNext(chain[idx+1]);
-            }
-            if (i == 0) return other.niceify(this);
-            chain[i-1].setNext(other.niceify(this));
-            return chain[0];
+            return createChain(other);
         } else {
             NiceJoin join = new NiceJoin();
             for (UglyTree other: childs) {
-                Set<Integer> toForget = new HashSet<>(nodes);
-                Set<Integer> toIntroduce = new HashSet<>(other.nodes);
-                toForget.removeAll(other.nodes);
-                toIntroduce.removeAll(nodes);
-                NiceChain[] chain = new NiceChain[toIntroduce.size() + toForget.size()];
-                int i = 0;
-                for (int idx: toForget) {
-                    chain[i] = new NiceIntroduce(idx);
-                    i++;
-                }
-                for (int idx: toIntroduce) {
-                    chain[i] = new NiceForget(idx);
-                    i++;
-                }
-                for (int idx = 0; idx < i-1; idx++) {
-                    chain[idx].setNext(chain[idx+1]);
-                }
-                if (i == 0) return other.niceify(this);
-                chain[i-1].setNext(other.niceify(this));
-                join.addNext(chain[0]);
+                var chain = createChain(other);
+                join.addNext(chain);
             }
             return join;
         }
     }
+
+    private NiceTree createChain(UglyTree other) {
+        Set<Integer> toForget = new HashSet<>(nodes);
+        Set<Integer> toIntroduce = new HashSet<>(other.nodes);
+        toForget.removeAll(other.nodes);
+        toIntroduce.removeAll(nodes);
+        NiceChain[] chain = new NiceChain[toIntroduce.size() + toForget.size()];
+        int i = 0;
+        for (int idx: toForget) {
+            chain[i] = new NiceIntroduce(idx);
+            i++;
+        }
+        for (int idx: toIntroduce) {
+            chain[i] = new NiceForget(idx);
+            i++;
+        }
+        for (int idx = 0; idx < i-1; idx++) {
+            chain[idx].setNext(chain[idx+1]);
+        }
+        if (i == 0) return other.niceify(this);
+        chain[i-1].setNext(other.niceify(this));
+        return chain[0];
+    }
+
     public String toString() {return "Ugly: "+idx + ", " + nodes;}
 }
 
