@@ -47,24 +47,24 @@ public class TreeWidth {
         }
     }
 
+    public static void run(String input) throws FileNotFoundException {
+        System.out.print(input);
+        long start = System.nanoTime();
+        long[] res = executeOnData(input);
+        long duration = System.nanoTime() - start;
+        System.out.println(", " + res[0] + ", " + res[1] + ", " + duration/1000000);
+    }
+
     public static void main(String args[]) throws IOException{
         if (args.length == 1 )  {
             String input = args[0]; //getInputName();
-            System.out.print(input);
-            long start = System.nanoTime();
-            int res = executeOnData(input);
-            long duration = System.nanoTime() - start;
-            System.out.println(", "+res+", " + duration/1000000);
+            run(input);
         }
         else {
             Set <String> names = listFilesUsingFilesList("data");
 
             for (String input: names) {
-                System.out.print(input);
-                long start = System.nanoTime();
-                int res = executeOnData(input);
-                long duration = System.nanoTime() - start;
-                System.out.println(", "+res+", " + duration/1000000);
+                run(input);
             }
         }
 
@@ -77,7 +77,7 @@ public class TreeWidth {
         return f;
     }
 
-    private static int executeOnData(String f) throws FileNotFoundException {
+    private static long[] executeOnData(String f) throws FileNotFoundException {
 
         File G = new File("data/" + f + ".gr");
         File T = new File("data/" + f + ".td");
@@ -91,7 +91,10 @@ public class TreeWidth {
                 System.out.println(Arrays.toString(bol));
             }
             */
-        if (tree.length<2) return 1;
+        if (tree.length<2) {
+            long [] ret = {1, 0};
+            return ret;
+        }
         UglyTree root = tree[0]; //random.nextInt(tree.length)];
         root.addChild(tree[1]);
         //zero.addChild(root);
@@ -99,7 +102,9 @@ public class TreeWidth {
         //root.printTree();
         NiceTree nice = root.niceify();
         //nice.printTree();
-        return nice.c(new HashSet<>());
+        int res = nice.c(new HashSet<>());
+        long [] ret = {res, nice.count};
+        return ret;
     }
 
     private static void readGraph(File G) throws FileNotFoundException {
@@ -208,12 +213,14 @@ abstract class Tree{
 
 abstract class NiceTree extends Tree {
     Map<Set<Integer>, Integer> cache = new HashMap<Set<Integer>,Integer>();
+    public static long count = 0;
     public int c(Set<Integer> S) {
         //System.out.println(S);
         if (cache.containsKey(S)) return cache.get(S);
         int res = c_impl(S);
         cache.put(S, res);
         //System.out.print(res+",");
+        count++;
         return res;
     }
     public abstract int c_impl(Set<Integer> S);
