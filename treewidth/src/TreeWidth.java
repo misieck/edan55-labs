@@ -34,7 +34,7 @@ public class TreeWidth {
         long start = System.nanoTime();
         long[] res = executeOnData(input);
         long duration = System.nanoTime() - start;
-        System.out.println(", " + res[0] + ", " + res[1] + ", " + duration/1000000 + ", w: " + res[2] + ", n: " + res[3]);
+        System.out.println(", n: " + res[3] + ", w: " + res[2] + ", a: " + res[0] + ", t: " + duration/1000000);
     }
         
     public static void main(String args[]) throws IOException{
@@ -74,7 +74,7 @@ public class TreeWidth {
             }
             */
         if (tree.length<2) {
-            long [] ret = {1, 0};
+            long [] ret = {1, 0, -1, -1};
             return ret;
         }
         UglyTree root = tree[0]; //random.nextInt(tree.length)];
@@ -151,6 +151,10 @@ public class TreeWidth {
 
 class Nodes {
     static boolean[][] connected;
+    public static int getSize(){
+        return connected.length;
+    }
+
     public static void setSize(int size) {
         connected = new boolean[size+1][size+1];
     }
@@ -310,12 +314,14 @@ class NiceJoin extends NiceTree {
 
 class UglyTree extends Tree{
     int idx;
+    int width;
     ArrayList<UglyTree> childs;
     Set<Integer> nodes;
-    public UglyTree(int i) {
+    public UglyTree(int i, int w) {
         idx = i;
         childs = new ArrayList<UglyTree>();
         nodes = new HashSet<Integer>();
+        this.width = w;
     }
 
     public Tree[] getChildren() {
