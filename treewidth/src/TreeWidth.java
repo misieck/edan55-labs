@@ -15,25 +15,7 @@ public class TreeWidth {
         if (!assertsEnabled)
             throw new RuntimeException("Asserts must be enabled!!!");
     }
-    public static Set<String> listFilesUsingJavaIO(String dir) {
-        return Stream.of(new File(dir).listFiles())
-                .filter(file -> !file.isDirectory())
-                .map(File::getName)
-                .collect(Collectors.toSet());
-    }
 
-    public static Set<String> listFilesUsingDirectoryStream(String dir) throws IOException {
-        Set<String> fileSet = new HashSet<>();
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(dir))) {
-            for (Path path : stream) {
-                if (!Files.isDirectory(path)) {
-                    fileSet.add(path.getFileName()
-                            .toString());
-                }
-            }
-        }
-        return fileSet;
-    }
 
     public static Set<String> listFilesUsingFilesList(String dir) throws IOException {
         try (Stream<Path> stream = Files.list(Paths.get(dir))) {
@@ -52,9 +34,9 @@ public class TreeWidth {
         long start = System.nanoTime();
         long[] res = executeOnData(input);
         long duration = System.nanoTime() - start;
-        System.out.println(", " + res[0] + ", " + res[1] + ", " + duration/1000000);
+        System.out.println(", " + res[0] + ", " + res[1] + ", " + duration/1000000 + ", w: " + res[2] + ", n: " + res[3]);
     }
-
+        
     public static void main(String args[]) throws IOException{
         if (args.length == 1 )  {
             String input = args[0]; //getInputName();
@@ -103,7 +85,7 @@ public class TreeWidth {
         NiceTree nice = root.niceify();
         //nice.printTree();
         int res = nice.c(new HashSet<>());
-        long [] ret = {res, nice.count};
+        long [] ret = {res, nice.count, tree[0].width, Nodes.getSize()};
         return ret;
     }
 
@@ -140,10 +122,10 @@ public class TreeWidth {
                 assert (tree == null) ;
                 b = Integer.parseInt(line[2]);
                 w = Integer.parseInt(line[3]); // still not sure this is needed
-                v = Integer.parseInt(line[3]); // pretty sure this will always be = n so REALLY not needed
+                v = Integer.parseInt(line[4]); // pretty sure this will always be = n so REALLY not needed
                 tree = new UglyTree[b+1];
                 for (int i = 0; i <= b; i++) {
-                    tree[i] = new UglyTree(i);
+                    tree[i] = new UglyTree(i,w);
                 }
             }
             else if (line[0].equals("b")) {
