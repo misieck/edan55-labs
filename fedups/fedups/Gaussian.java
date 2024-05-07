@@ -3,11 +3,10 @@
 **/
 
 import java.util.Scanner;
-/** Class GaussianElimination **/
-public class Gaussian
 
+public class Gaussian
 {
-    public void solve(double[][] A, double[] B) {
+    public static double[] solve(double[][] A, double[] B) {
         int N = B.length;
         for (int k = 0; k < N; k++) {
             /** find pivot row **/
@@ -31,8 +30,8 @@ public class Gaussian
                     A[i][j] -= factor * A[k][j];
             }
         }
-        /** Print row echelon form **/
-        printRowEchelonForm(A, B);
+        //printRowEchelonForm(A, B);
+
         /** back substitution **/
         double[] solution = new double[N];
         for (int i = N - 1; i >= 0; i--) {
@@ -40,12 +39,11 @@ public class Gaussian
             for (int j = i + 1; j < N; j++) 
                 sum += A[i][j] * solution[j];
             solution[i] = (B[i] - sum) / A[i][i];
-        }        
-        /** Print solution **/
-        printSolution(solution);
+        }
+        return solution;
     }
-    /** function to print in row    echleon form **/
-    public void printRowEchelonForm(double[][] A, double[] B) {
+
+    public static void printRowEchelonForm(double[][] A, double[] B) {
         int N = B.length;
         System.out.println("\nRow Echelon form : ");
         for (int i = 0; i < N; i++)
@@ -56,36 +54,25 @@ public class Gaussian
         }
         System.out.println();
     }
-    /** function to print solution **/
-    public void printSolution(double[] sol) {
+
+    public static void printSolution(double[] sol) {
         int N = sol.length;
         System.out.println("\nSolution : ");
         for (int i = 0; i < N; i++) 
             System.out.printf("%.3f ", sol[i]);   
         System.out.println();
-    }    
-
-    /** Main function **/
+    }
 
     public static void main (String[] args) {
         Scanner scan = new Scanner(System.in);
         System.out.println("Gaussian Elimination Algorithm Test\n");
-        /** Make an object of GaussianElimination class **/
-        Gaussian ge = new Gaussian();
-        System.out.println("\nEnter number of variables");
-        int N = scan.nextInt();
+        int N = 3;
+        double[] B = {3, 99, 5};
+        double[][] A = {{4, -7,  3},
+                       { 6,  5, -1},
+                       { 0, -2,  0}};
 
-        double[] B = new double[N];
-        double[][] A = new double[N][N];
-        System.out.println("\nEnter "+ N +" equations coefficients ");
-
-        for (int i = 0; i < N; i++)
-            for (int j = 0; j < N; j++)
-                A[i][j] = scan.nextDouble();
-        System.out.println("\nEnter "+ N +" solutions");
-
-        for (int i = 0; i < N; i++)
-            B[i] = scan.nextDouble();
-        ge.solve(A,B);
+        double [] res = solve(A,B);
+        printSolution(res);
     }
 }
