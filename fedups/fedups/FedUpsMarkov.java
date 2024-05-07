@@ -25,14 +25,20 @@ public class FedUpsMarkov {
                 p2 = Double.parseDouble(s.next());
                 A[u][v] = p1;
                 A[v][u] = p2;
-                b[u] += p1 * t;
-                b[v] += p2 * t;
+                // negative cuz b is gonna become negative anyways
+                b[u] -= p1 * t;
+                b[v] -= p2 * t;
             }
+            for (int x = 0; x < n; x++) A[x][x] -= 1;
             for (int x = 0; x < n; x++) {
                 for (int y = 0; y < n; y++) System.out.print(A[x][y] + " ");
                 System.out.println();
             }
             for (int x = 0; x < n; x++) System.out.println(b[x]);
+            double[] sol = Gaussian.solve(A, b);
+
+            System.out.println("FedUps time: " + sol[f]);
+            System.out.println("PostNHL time: " + sol[p]);
         }
         catch (FileNotFoundException e) {
             System.out.println("Failed bad: " + e);
