@@ -26,12 +26,12 @@ class Node {
         double d = r.nextDouble();
         return edges.higherEntry(d).getValue();
     }
-    void verify() {
+    void scanGraph() {
         if (accessible) return;
         accessible = true;
         for (Edge e: edgeList) {
             if (e.accessible(this)) {
-                e.getOther(this).verify();
+                e.getOther(this).scanGraph();
             }
         }
     }
@@ -115,7 +115,7 @@ public class FedUpsMonte {
             double ftot = 0,ptot = 0;
             Car cf = new Car(node[f], node[h]);
             Car cp = new Car(node[p], node[h]);
-            node[h].verify();
+            node[h].scanGraph();
             if (node[f].accessible) {
                 for (i = 0; i < 10000; i++) {
                     ftot += cf.deliver();
