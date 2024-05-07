@@ -82,13 +82,17 @@ public class TreeWidth {
         root.addChild(tree[1]);
         //zero.addChild(root);
 
-        root.printTree();
+        //root.printTree();
         int [] legend = new int[tree[0].width];
         Arrays.fill(legend, NiceTree.REMOVED_VAL);
+        NiceTree.count = 0;
         NiceTree nice = root.niceify(legend);
-        nice.printTree();
+        //nice.printTree();
+        //int res = nice.c(new HashSet<>());
         int res = nice.c_bit(0);
         long [] ret = {res, nice.count, tree[0].width, Nodes.getSize()};
+        //int[] res = nice.c_all(new HashSet<>(), 0);
+        //long [] ret = {res[1], nice.count, tree[0].width, Nodes.getSize()};
         return ret;
     }
 
@@ -245,7 +249,28 @@ abstract class NiceTree extends Tree {
         count++;
         return res;
     }
+
+    public int[] c_all(Set<Integer> Ss, long Sb) {
+        //System.out.println(S);
+
+        int [] res = {-1,-1};
+        if (cache_bit.containsKey(Sb)) res[0] = cache_bit.get(Sb);
+        if (cache.containsKey(Ss)) res[1] = cache.get(Ss);
+        if (res[0] != -1 || res[1] != -1) return res;
+
+        res = c_allimpl(Ss, Sb);
+        cache_bit.put(Sb, res[0]);
+        cache.put(Ss, res[1]);
+
+        //System.out.print(res+",");
+        if (res[0] != res[1]){
+            System.out.println("Res: " + this.toString() + ",bit: " + res[0] + ", " + res[1]);
+        }
+        count++;
+        return res;
+    }
     public abstract int c_impl(Set<Integer> S);
+    public abstract int[] c_allimpl(Set<Integer> Ss, long Sb);
     public abstract int c_bitimpl(long S);
 
 }
@@ -276,6 +301,11 @@ class NiceLeaf extends NiceTree {
         //System.out.println("Leaf reached");
         assert (S == 0);
         return 0;
+    }
+    public int[] c_allimpl(Set<Integer> Ss, long Sb) {
+        //System.out.println("Leaf reached");
+        assert (Sb == 0);
+        return new int[2];
     }
 
     public void setLegend(int[]l){
@@ -324,16 +354,33 @@ class NiceIntroduce extends NiceChain {
     }
 
     public int c_bitimpl(long S) {
-        //System.out.print("Introduce node for " + introduced);
         if (MyBitSet.get(S, introIdx)) {
-            //System.out.println(", which was found in S");
             long Sr = MyBitSet.clear(S, introIdx);
             return next.c_bit(Sr) + 1;
         }
         else {
-            //System.out.println(", which was not found in S");
             return next.c_bit(S);
         }
+    }
+
+    public int[] c_allimpl(Set<Integer> Ss, long Sb) {
+        int[] ret = new int[2];
+        boolean bit_cond = MyBitSet.get(Sb, introIdx);
+        boolean cond = Ss.contains(introduced);
+        if (cond != bit_cond){
+            System.out.println("Ss: "+ Ss + ", Sb: " + Sb + ", " + this.toString());
+            assert(false);
+        }
+        if (bit_cond) {
+            long Sbr = MyBitSet.clear(Sb, introIdx);
+            Set<Integer> Ssr = new HashSet<Integer>(Ss);
+            Ssr.remove(introduced);
+            ret = next.c_all(Ssr, Sbr); ret[0] += 1; ret[1] += 1;
+        }
+        else {
+            ret = next.c_all(Ss, Sb);
+        }
+        return ret;
     }
 
     public String toString() {return "NiceIntroduce_"+ introduced + "_legend_" + Arrays.toString(legend);}
@@ -342,7 +389,7 @@ class NiceIntroduce extends NiceChain {
 class NiceForget extends NiceChain {
     Integer removed;
     int removedIdx;
-    boolean connectsPossibly = false;
+    boolean connectsPossibly = true;
 
     public NiceForget(int removed, int width) {
         this.removed = removed;
@@ -355,43 +402,65 @@ class NiceForget extends NiceChain {
         int empty = findFirstOf(l, REMOVED_VAL);
         removedIdx = empty;
         var ll = Arrays.stream( l ).boxed().toArray( Integer[]::new );
-        try {
-            Set<Integer> l_set = new HashSet<Integer>(Set.of(ll));
-            connectsPossibly = Nodes.connectsAny(removed, l_set);
-        } catch (IllegalArgumentException e){}
-
         int [] lcpy = Arrays.copyOf(l,l.length);
         lcpy[empty] = removed;
         legend = lcpy;
+        try {
+            Set<Integer> l_set = new HashSet<Integer>(Set.of(ll));
+            connectsPossibly = Nodes.connectsAny(removed, l_set);
+            connectsPossibly = true; //doesnt seem to matter - premature opt
+        } catch (IllegalArgumentException e){}
     };
 
     public int c_bitimpl(long S) {
-        if (connectsPossibly && Nodes.connectsAnyBit(removed, S, legend)) {
+        if (connectsPossibly&& Nodes.connectsAnyBit(removed, S, legend)) {
             return next.c_bit(S);
         }
 
         long Sr = MyBitSet.set(S, removedIdx);
-        //System.out.println("--TESTING ADD FOR "+removed+"--");
         int r1 = next.c_bit(Sr);
-        //System.out.println("--TESTING NOT FOR "+removed+"--");
         int r2 = next.c_bit(S);
-        //     System.out.println(S+"+["+removed+"]="+r1+" or "+r2);
         return Math.max(r1, r2);
     }
 
     public int c_impl(Set<Integer> S) {
-        //System.out.println("Forget node for " + removed);
         if (Nodes.connectsAny(removed, S)) {
             return next.c(S);
         }
         Set<Integer> Sr =  new HashSet<>(S);
         Sr.add(removed);
-        //System.out.println("--TESTING ADD FOR "+removed+"--");
         int r1 = next.c(Sr);
-        //System.out.println("--TESTING NOT FOR "+removed+"--");
         int r2 = next.c(S);
-           //     System.out.println(S+"+["+removed+"]="+r1+" or "+r2);
         return Math.max(r1, r2);
+    }
+    public int[] c_allimpl(Set<Integer> Ss, long Sb) {
+        int[] ret = new int[2];
+        boolean bit_cond = connectsPossibly && Nodes.connectsAnyBit(removed, Sb, legend);
+        boolean cond = Nodes.connectsAny(removed, Ss);
+        if (cond != bit_cond){
+            System.out.println("Ss: "+ Ss + ", Sb: " + Sb + ", " + this.toString());
+            assert(false);
+        }
+        if (cond) {
+            return next.c_all(Ss, Sb);
+        }
+        Set<Integer> Ssr =  new HashSet<>(Ss);
+        Ssr.add(removed);
+        long Sbr = MyBitSet.set(Sb, removedIdx);
+
+        var r1 = next.c_all(Ssr, Sbr);
+        var r2 = next.c_all(Ss, Sb);
+        if ( r1[0] != r1[1] ){
+            System.out.println("Ss: "+ Ss + ", Sb: " + Sb + ", " + this.toString() + ", ("+Arrays.toString(r1)+")");
+            assert(false);
+        }
+        if ( r2[0] != r2[1]){
+            System.out.println("Ss: "+ Ss + ", Sb: " + Sb + ", " + this.toString() + ", ("+Arrays.toString(r2)+")");
+            assert(false);
+        }
+        ret[1] = Math.max(r1[1], r2[1]);
+        ret[0] = Math.max(r1[0], r2[0]);
+        return ret;
     }
 
 
@@ -417,7 +486,7 @@ class NiceJoin extends NiceTree {
             //System.out.println("Next branch!");
             sum += n.c(S);
         }
-       // System.out.println("sum="+sum+",S="+S.toString()+"nexts="+nexts.size());
+        //System.out.println("sum="+sum+",S.size="+S.size()+", nexts="+nexts.size());
         return sum - (S.size() * (nexts.size()-1));
     }
 
@@ -425,11 +494,29 @@ class NiceJoin extends NiceTree {
     public int c_bitimpl(long S) {
         int sum = 0;
         for (NiceTree n: nexts) {
-            //System.out.println("Next branch!");
             sum += n.c_bit(S);
         }
-        // System.out.println("sum="+sum+",S="+S.toString()+"nexts="+nexts.size());
         return sum - (Long.bitCount(S)* (nexts.size()-1));
+    }
+    
+    public int[] c_allimpl(Set<Integer> Ss, long Sb) {
+        //System.out.println("Forget node for " + removed);
+        int[] ret = new int[2];
+        //System.out.print("Introduce node for " + introduced);
+        int[] sum = new int[2];
+        for (NiceTree n: nexts) {
+            //System.out.println("Next branch!");
+            sum[0] += n.c_all(Ss, Sb)[0];
+            sum[1] += n.c_all(Ss, Sb)[1];
+        }
+        ret [0] = sum[0] - (Long.bitCount(Sb)* (nexts.size()-1));
+        ret [1] = sum[1] - (Ss.size() * (nexts.size()-1));
+        if (Long.bitCount(Sb) != Ss.size()){
+            System.out.println("sum="+sum+",Ss.size="+Ss.size()+", nexts="+nexts.size());
+            System.out.println("sum="+sum+",S.bits="+Long.bitCount(Sb)+", nexts="+nexts.size());
+            assert(false);
+        }
+        return ret;
     }
 
     public Tree[] getChildren() {
