@@ -87,22 +87,33 @@ class Car {
         current = start;
     }
 }
-public class FedUpsMonte {
-    public static void main(String args[]) {
-        File g = new File("data/"+args[0]+".in");
-        int n, m, h, f, p, i, u, v, t;
+
+class DeliveryGraph {
+    Node[] nodes;
+    Edge[] edges;
+    int home;
+    int fed;
+    int post;
+    double[][] A;
+    double[] b;
+
+    public DeliveryGraph(String name) throws IOException{
+        File g = new File("data/"+name+".in");
+        int n, m, i, u, v, t;
         double p1, p2;
-        try (Scanner s = new Scanner(g)){
+        try (Scanner s = new Scanner(g)) {
             n = s.nextInt();
             m = s.nextInt();
-            h = s.nextInt();
-            f = s.nextInt();
-            p = s.nextInt();
-            Node[] node = new Node[n];
-            Edge[] edge = new Edge[m];
+            home = s.nextInt();
+            fed = s.nextInt();
+            post = s.nextInt();
+            nodes = new Node[n];
+            edges = new Edge[m];
+            A = new double[n][n];
+            b = new double[n];
 
             for (i = 0; i < n; i += 1)
-                node[i] = new Node(i);
+                nodes[i] = new Node(i);
 
             for (i = 0; i < m; i += 1) {
                 u = s.nextInt();
@@ -110,34 +121,46 @@ public class FedUpsMonte {
                 t = s.nextInt();
                 p1 = Double.parseDouble(s.next());
                 p2 = Double.parseDouble(s.next());
-                edge[i] = new Edge(node[u], node[v], t, p1, p2);
-            }
-            double ftot = 0,ptot = 0;
-            Car cf = new Car(node[f], node[h]);
-            Car cp = new Car(node[p], node[h]);
-            node[h].scanGraph();
-            if (node[f].accessible) {
-                for (i = 0; i < 10000; i++) {
-                    ftot += cf.deliver();
-                    cf.reset();
-                }
-                System.out.println("Est. time FedUps = " + ftot / 10000);
-            } else {
-                System.out.println("FedUps: We tried to deliver your package, but you were not at home");
-            }
-            if (node[p].accessible) {
-                for (i = 0; i < 10000; i++) {
-                    ptot += cp.deliver();
-                    cp.reset();
-                }
-                System.out.println("Est. time PostNHL = " + ptot / 10000);
-            } else {
-                System.out.println("PostNHL: We tried to deliver your package, but you were not at home");
+                edges[i] = new Edge(nodes[u], nodes[v], t, p1, p2);
+                A[u][v] = p1;
+                A[v][u] = p2;
+                b[u] -= p1 * t;
+                b[v] -= p2 * t;
             }
         }
-        catch (FileNotFoundException e) {
-            System.out.println("Failed bad: " + e);
-            return;
+    }
+}
+
+public class FedUpsMonte {
+    public static void main(String args[]) throws IOException {
+
+        DeliveryGraph G = new DeliveryGraph(args[0]);
+        Node[]node = G.nodes;
+        int f = G.fed;
+        int h = G.home;
+        int p = G.post;
+        double ftot = 0,ptot = 0;
+        Car cf = new Car(node[f], node[h]);
+        Car cp = new Car(node[p], node[h]);
+        node[h].scanGraph();
+        if (node[f].accessible) {
+            for (int i = 0; i < 10000; i++) {
+                ftot += cf.deliver();
+                cf.reset();
+            }
+            System.out.println("Est. time FedUps = " + ftot / 10000);
+        } else {
+            System.out.println("FedUps: We tried to deliver your package, but you were not at home");
         }
+        if (node[p].accessible) {
+            for (int i = 0; i < 10000; i++) {
+                ptot += cp.deliver();
+                cp.reset();
+            }
+            System.out.println("Est. time PostNHL = " + ptot / 10000);
+        } else {
+            System.out.println("PostNHL: We tried to deliver your package, but you were not at home");
+        }
+
 	}
 }
