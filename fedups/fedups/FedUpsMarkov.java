@@ -14,11 +14,8 @@ public class FedUpsMarkov {
             h = s.nextInt();
             f = s.nextInt();
             p = s.nextInt();
-            Node[] node = new Node[n];
-            Edge[] edge = new Edge[m];
-
-            for (i = 0; i < n; i += 1)
-                node[i] = new Node(i);
+            double[][] A = new double[n][n];
+            double[] b = new double[n];
 
             for (i = 0; i < m; i += 1) {
                 u = s.nextInt();
@@ -26,30 +23,16 @@ public class FedUpsMarkov {
                 t = s.nextInt();
                 p1 = Double.parseDouble(s.next());
                 p2 = Double.parseDouble(s.next());
-                edge[i] = new Edge(node[u], node[v], t, p1, p2);
+                A[u][v] = p1;
+                A[v][u] = p2;
+                b[u] += p1 * t;
+                b[v] += p2 * t;
             }
-            double ftot = 0,ptot = 0;
-            Car cf = new Car(node[f], node[h]);
-            Car cp = new Car(node[p], node[h]);
-            node[h].verify();
-            if (node[f].accessible) {
-                for (i = 0; i < 10000; i++) {
-                    ftot += cf.deliver();
-                    cf.reset();
-                }
-                System.out.println("Est. time FedUps = " + ftot / 10000);
-            } else {
-                System.out.println("FedUps: We tried to deliver your package, but you were not at home");
+            for (int x = 0; x < n; x++) {
+                for (int y = 0; y < n; y++) System.out.print(A[x][y] + " ");
+                System.out.println();
             }
-            if (node[p].accessible) {
-                for (i = 0; i < 10000; i++) {
-                    ptot += cp.deliver();
-                    cp.reset();
-                }
-                System.out.println("Est. time PostNHL = " + ptot / 10000);
-            } else {
-                System.out.println("PostNHL: We tried to deliver your package, but you were not at home");
-            }
+            for (int x = 0; x < n; x++) System.out.println(b[x]);
         }
         catch (FileNotFoundException e) {
             System.out.println("Failed bad: " + e);
