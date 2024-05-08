@@ -82,12 +82,12 @@ public class TreeWidth {
         root.addChild(tree[1]);
         //zero.addChild(root);
 
-        //root.printTree();
+        root.printTree();
         int [] legend = new int[tree[0].width];
         Arrays.fill(legend, NiceTree.REMOVED_VAL);
         NiceTree.count = 0;
         NiceTree nice = root.niceify(legend);
-        //nice.printTree();
+        nice.printTree();
         //int res = nice.c(new HashSet<>());
         int res = nice.c_bit(0);
         long [] ret = {res, nice.count, tree[0].width, Nodes.getSize()};
@@ -196,6 +196,7 @@ abstract class Tree{
     public void printTree() {
         printTree(this, 0);
     }
+
     public static void printTree( Tree tree, int level){
         // level *= 3;
         String indent = new String(new char[level]).replace("\0", " ");
@@ -231,15 +232,7 @@ abstract class NiceTree extends Tree {
     public static long count = 0;
     //NiceTree(){ legend = new int[width];  }
     abstract public void setLegend(int[]l);
-    public int c(Set<Integer> S) {
-        //System.out.println(S);
-        if (cache.containsKey(S)) return cache.get(S);
-        int res = c_impl(S);
-        cache.put(S, res);
-        //System.out.print(res+",");
-        count++;
-        return res;
-    }
+
     public int c_bit(long S) {
         //System.out.println(S);
         if (cache_bit.containsKey(S)) return cache_bit.get(S);
@@ -269,7 +262,6 @@ abstract class NiceTree extends Tree {
         count++;
         return res;
     }
-    public abstract int c_impl(Set<Integer> S);
     public abstract int[] c_allimpl(Set<Integer> Ss, long Sb);
     public abstract int c_bitimpl(long S);
 
@@ -291,12 +283,7 @@ abstract class NiceChain extends NiceTree{
 }
 
 class NiceLeaf extends NiceTree {
-    //NiceLeaf(){ super(width); }
-    public int c_impl(Set<Integer> S) {
-        //System.out.println("Leaf reached");
-        assert (S.size() == 0);
-        return 0;
-    }
+  
     public int c_bitimpl(long S) {
         //System.out.println("Leaf reached");
         assert (S == 0);
@@ -339,19 +326,6 @@ class NiceIntroduce extends NiceChain {
         legend = lcpy;
     };
     
-    public int c_impl( Set<Integer> S) {
-        //System.out.print("Introduce node for " + introduced);
-        if (S.contains(introduced)) {
-            //System.out.println(", which was found in S");
-            Set<Integer> Sr = new HashSet<Integer>(S);
-            Sr.remove(introduced);
-            return next.c(Sr) + 1;
-        }
-        else {
-            //System.out.println(", which was not Skyddsrumsrenovering.found in S");
-            return next.c(S);
-        }
-    }
 
     public int c_bitimpl(long S) {
         if (MyBitSet.get(S, introIdx)) {
@@ -420,19 +394,10 @@ class NiceForget extends NiceChain {
         long Sr = MyBitSet.set(S, removedIdx);
         int r1 = next.c_bit(Sr);
         int r2 = next.c_bit(S);
+        next = null;
         return Math.max(r1, r2);
     }
 
-    public int c_impl(Set<Integer> S) {
-        if (Nodes.connectsAny(removed, S)) {
-            return next.c(S);
-        }
-        Set<Integer> Sr =  new HashSet<>(S);
-        Sr.add(removed);
-        int r1 = next.c(Sr);
-        int r2 = next.c(S);
-        return Math.max(r1, r2);
-    }
     public int[] c_allimpl(Set<Integer> Ss, long Sb) {
         int[] ret = new int[2];
         boolean bit_cond = connectsPossibly && Nodes.connectsAnyBit(removed, Sb, legend);
@@ -478,17 +443,6 @@ class NiceJoin extends NiceTree {
         int [] lcpy = Arrays.copyOf(l,l.length);
         legend = lcpy;
     };
-
-    public int c_impl(Set<Integer> S) {
-        //System.out.println("BRANCH FOUND");
-        int sum = 0;
-        for (NiceTree n: nexts) {
-            //System.out.println("Next branch!");
-            sum += n.c(S);
-        }
-        //System.out.println("sum="+sum+",S.size="+S.size()+", nexts="+nexts.size());
-        return sum - (S.size() * (nexts.size()-1));
-    }
 
     @Override
     public int c_bitimpl(long S) {
