@@ -34,3 +34,5 @@ bin/
 *.class
 *.java~
 vc.tex
+/treewidth/target/
+/treewidth/mavenproject1/target/

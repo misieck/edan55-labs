@@ -9,6 +9,7 @@ import java.util.stream.*;
 //import BitSet.MyBitSet;
 
 public class TreeWidth {
+    public static final String DATA = "data/";
     public static void checkAssert() throws RuntimeException {
         boolean assertsEnabled = false;
         assert assertsEnabled = true; // Intentional side effect!!!
@@ -44,7 +45,10 @@ public class TreeWidth {
             run(input);
         }
         else {
-            Set <String> names = listFilesUsingFilesList("data");
+            Path currentRelativePath = Paths.get("");
+            String s = currentRelativePath.toAbsolutePath().toString();
+            //System.out.println("Current absolute path is: " + s);
+            Set <String> names = listFilesUsingFilesList(DATA);
 
             for (String input: names) {
                 run(input);
@@ -62,8 +66,8 @@ public class TreeWidth {
 
     private static long[] executeOnData(String f) throws FileNotFoundException {
 
-        File G = new File("data/" + f + ".gr");
-        File T = new File("data/" + f + ".td");
+        File G = new File(DATA + f + ".gr");
+        File T = new File(DATA + f + ".td");
 
         readGraph(G);
         UglyTree[] tree = readUglyTree(T);
@@ -82,12 +86,12 @@ public class TreeWidth {
         root.addChild(tree[1]);
         //zero.addChild(root);
 
-        root.printTree();
+       // root.printTree();
         int [] legend = new int[tree[0].width];
         Arrays.fill(legend, NiceTree.REMOVED_VAL);
         NiceTree.count = 0;
         NiceTree nice = root.niceify(legend);
-        nice.printTree();
+       // nice.printTree();
         //int res = nice.c(new HashSet<>());
         int res = nice.c_bit(0);
         long [] ret = {res, nice.count, tree[0].width, Nodes.getSize()};
@@ -226,18 +230,30 @@ abstract class NiceTree extends Tree {
         return index;
     }
 
-    Map<Set<Integer>, Integer> cache = new HashMap<Set<Integer>,Integer>();
-    Map<Long, Integer> cache_bit = new HashMap<Long,Integer>();
+    Map<Set<Integer>, Integer> cache = new HashMap<>();
+    Map<Integer, Integer> cache_bit = new HashMap<>();
+    Map<Long, Integer> cache_hits = new HashMap<>();
+
     int[] legend;
+    public long hits = 0;
+    public static long all_hits = 0;
     public static long count = 0;
-    //NiceTree(){ legend = new int[width];  }
     abstract public void setLegend(int[]l);
 
     public int c_bit(long S) {
         //System.out.println(S);
-        if (cache_bit.containsKey(S)) return cache_bit.get(S);
+        if (cache_bit.containsKey((int)S)) {
+            hits ++;
+            all_hits ++;
+
+            //cache_hits.put(S, cache_hits.getOrDefault(S, 0)+ 1);
+            //if ( cache_hits.get(S) > 0){
+              //  System.out.println("SO MANY STARS: " + hits + ", S:" + cache_hits.get(S) + ", " + this.toString() );
+            //}
+            return cache_bit.remove((int)S);
+        }
         int res = c_bitimpl(S);
-        cache_bit.put(S, res);
+        cache_bit.put((int)S, res);
         //System.out.print(res+",");
         count++;
         return res;
@@ -247,12 +263,12 @@ abstract class NiceTree extends Tree {
         //System.out.println(S);
 
         int [] res = {-1,-1};
-        if (cache_bit.containsKey(Sb)) res[0] = cache_bit.get(Sb);
+        if (cache_bit.containsKey((int)Sb)) res[0] = cache_bit.get(Sb);
         if (cache.containsKey(Ss)) res[1] = cache.get(Ss);
         if (res[0] != -1 || res[1] != -1) return res;
 
         res = c_allimpl(Ss, Sb);
-        cache_bit.put(Sb, res[0]);
+        cache_bit.put((int)Sb, res[0]);
         cache.put(Ss, res[1]);
 
         //System.out.print(res+",");
@@ -328,13 +344,17 @@ class NiceIntroduce extends NiceChain {
     
 
     public int c_bitimpl(long S) {
+        //does S contain the introduced node
+        int ret = 0;
         if (MyBitSet.get(S, introIdx)) {
             long Sr = MyBitSet.clear(S, introIdx);
-            return next.c_bit(Sr) + 1;
+            ret = next.c_bit(Sr) + 1;
         }
         else {
-            return next.c_bit(S);
+            ret = next.c_bit(S);
         }
+        //next = null;
+        return ret;
     }
 
     public int[] c_allimpl(Set<Integer> Ss, long Sb) {
@@ -382,7 +402,7 @@ class NiceForget extends NiceChain {
         try {
             Set<Integer> l_set = new HashSet<Integer>(Set.of(ll));
             connectsPossibly = Nodes.connectsAny(removed, l_set);
-            connectsPossibly = true; //doesnt seem to matter - premature opt
+            //connectsPossibly = true; //doesnt seem to matter - premature opt
         } catch (IllegalArgumentException e){}
     };
 
@@ -394,7 +414,7 @@ class NiceForget extends NiceChain {
         long Sr = MyBitSet.set(S, removedIdx);
         int r1 = next.c_bit(Sr);
         int r2 = next.c_bit(S);
-        next = null;
+        //next = null;
         return Math.max(r1, r2);
     }
 
@@ -415,6 +435,7 @@ class NiceForget extends NiceChain {
 
         var r1 = next.c_all(Ssr, Sbr);
         var r2 = next.c_all(Ss, Sb);
+
         if ( r1[0] != r1[1] ){
             System.out.println("Ss: "+ Ss + ", Sb: " + Sb + ", " + this.toString() + ", ("+Arrays.toString(r1)+")");
             assert(false);
@@ -450,7 +471,7 @@ class NiceJoin extends NiceTree {
         for (NiceTree n: nexts) {
             sum += n.c_bit(S);
         }
-        return sum - (Long.bitCount(S)* (nexts.size()-1));
+        return sum - (Long.bitCount(S) * (nexts.size()-1));
     }
     
     public int[] c_allimpl(Set<Integer> Ss, long Sb) {
@@ -544,9 +565,36 @@ class UglyTree extends Tree{
                 join.addNext(chain);
             }
             return join;
+            //return createJoinery( legend);
         }
     }
-
+    
+    private NiceTree createJoinery(int[] legend){
+        ArrayList<UglyTree> children = (ArrayList<UglyTree>)childs.clone();
+        
+        NiceTree ret = _createJoinery(children, legend);
+        return ret;
+    }
+    
+    private NiceTree _createJoinery(ArrayList<UglyTree> children, int[] legend){
+        
+        NiceJoin join = new NiceJoin();
+        join.setLegend(legend);
+        int last = children.size() -1;
+        NiceTree chain = createChain(children.remove(last), legend);
+        join.addNext(chain);  
+        NiceTree rest = null;
+        if (children.size() == 1 ){
+            rest = createChain(children.remove(last-1), legend);
+        } else {
+            rest = _createJoinery(children, legend);
+        }
+        join.addNext(rest);
+        return join;
+        
+    }
+    
+    
     private NiceTree createChain(UglyTree other, int [] _legend) {
         Set<Integer> toIntroduce = new HashSet<>(nodes);
         Set<Integer> toForget = new HashSet<>(other.nodes);
